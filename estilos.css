@@ -1,0 +1,1207 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #fff;
+}
+
+/* ===== CONTENEDOR ===== */
+.tabla-contenedor {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+/* ===== TABLA ===== */
+.tabla-produccion {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  border: 2px solid #000;
+  table-layout: fixed;
+}
+
+/* ===== ENCABEZADO CON LOGO ===== */
+.encabezado-con-logo {
+  background: #000;
+  padding: 0;
+}
+
+.encabezado-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+}
+
+.inputs-encabezado {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.logo-encabezado img {
+  width: 120px;
+  height: auto;
+  background: #fff;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+/* ===== INPUTS ===== */
+.encabezado-input {
+  border: none;
+  outline: none;
+  height: 35px;
+  font: 600 15px "Segoe UI", Arial, sans-serif;
+  color: #fff;
+  background: #000;
+  text-align: center;
+  border-radius: 0;
+  appearance: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.encabezado-input:focus {
+  background: #111;
+  box-shadow: inset 0 0 0 2px #e40000;
+}
+
+select.encabezado-input {
+  background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 20 20'%3E%3Cpath d='M5 8l5 5 5-5H5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  background-size: 12px;
+  padding-right: 22px;
+  cursor: pointer;
+}
+
+.encabezado-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.encabezado-input::placeholder { color: #aaa; }
+
+/* ===== SEGUNDA FILA ===== */
+.encabezado-secundario th {
+  background: #bfbfbf;
+  color: #000;
+  font-weight: bold;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #999;
+}
+
+/* ===== CUERPO ===== */
+.tabla-produccion th,
+.tabla-produccion td {
+  border: 1px solid #999;
+  padding: 5px 6px;
+  font-size: 13px;
+}
+
+.tabla-produccion th:first-child {
+  background: #000;
+  color: #fff;
+  text-align: left;
+  padding-left: 8px;
+  width: 90px;
+}
+
+.tabla-produccion td[contenteditable="true"] {
+  background: #d9d9d9;
+  outline: none;
+  cursor: text;
+}
+
+/* ===== RESPONSIVE TABLA ===== */
+@media (max-width: 768px) {
+  .encabezado-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .inputs-encabezado {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .logo-encabezado img {
+    align-self: flex-end;
+    width: 90px;
+  }
+}
+
+/* ===================================================
+   CRONOGRAMA — VERSIÓN ESTABLE Y 100% RESPONSIVE
+   =================================================== */
+.cronograma {
+  margin-top: 18px;
+  border: 2px solid #000;
+  background: #fff;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Cabecera */
+.cronograma-head {
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 2px solid #000;
+}
+.cronograma-head h3 { margin: 0; font-size: 16px; letter-spacing: .5px; }
+.cronograma-controles select {
+  background: #111;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+
+
+/* ===== EJE HORIZONTAL ===== */
+.cg-eje {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr); /* ✅ 12 columnas exactas */
+  margin-left: 110px;
+  height: 36px;
+  background: #fff;
+  border-bottom: 2px solid #000;
+  box-sizing: border-box;
+}
+.cg-eje .lab {
+  text-align: center;
+  font-size: 12px;
+  color: #222;
+  white-space: nowrap;
+  padding-bottom: 4px;
+}
+
+/* ===== GRILLA ===== */
+.cg-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #fff;
+  border-top: none;
+}
+
+/* ============================================
+   FIX DEFINITIVO — BARRAS SIEMPRE COMPLETAS
+   ============================================ */
+
+/* Fila del cronograma */
+.cg-row {
+  display: flex;
+}
+
+/* Carril donde van las barras */
+.cg-lane {
+  position: relative;
+  flex: 1;
+  background: #d9d9d9;
+
+  /* fix clave */
+  overflow: visible !important;
+  min-height: 36px !important;
+
+  /* el borde va adentro, NO en cg-row */
+  border-left: 1px solid #ccc;
+  border-bottom: 1px solid #bdbdbd;
+}
+
+/* Barra (corrida) */
+.cg-bar {
+  position: absolute !important;
+  height: 24px !important;
+  line-height: 24px !important;
+
+  /* TODAS alineadas correctamente */
+  top: 6px !important;
+
+  background: #e10600;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 3px;
+
+  padding: 0 8px 0 28px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+}
+
+/* Botón X dentro de la barra */
+.cg-bar-close {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  font-size: 13px;
+  border-radius: 4px;
+
+  background: rgba(0,0,0,.4);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.5);
+  cursor: pointer;
+}
+
+.cg-bar-close:hover {
+  background: rgba(0,0,0,.6);
+}
+
+.cg-bar-close.is-hidden {
+  display: none;
+}
+
+
+
+.cg-linea {
+  width: 110px;
+  background: #000;
+  color: #fff;
+  padding: 6px 8px;
+  font-weight: 700;
+  border-right: 1px solid #bdbdbd;
+  flex-shrink: 0;
+}
+
+.cg-lane {
+  position: relative;
+  flex: 1;
+  background: #d9d9d9;
+  border-left: 1px solid #ccc;
+  overflow: visible; /* muy importante */
+  transition: height 0.3s ease;
+}
+
+.cg-bar {
+  position: absolute;
+  height: 24px;       /* todas igual */
+  line-height: 24px;  /* centra el texto */
+  background: #e10600;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 8px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+}
+
+
+
+/* Scroll personalizado */
+.cronograma::-webkit-scrollbar { height: 6px; }
+.cronograma::-webkit-scrollbar-thumb { background: #aaa; border-radius: 3px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .cg-linea { width: 90px; font-size: 12px; }
+  .cg-lane { height: 34px; }
+  .cg-bar  { height: 22px; font-size: 12px; }
+  .cg-eje .lab { font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+  .cg-linea { width: 80px; font-size: 11px; }
+  .cg-bar { font-size: 11px; }
+}
+
+/* ===== Ajuste de alineación móvil ===== */
+@media (max-width: 768px) {
+  .cg-eje {
+    margin-left: 90px; /* igual que .cg-linea */
+    width: calc(100% - 90px);
+  }
+  
+}
+@media (max-width: 480px) {
+  .cg-eje {
+    margin-left: 80px; /* igual que .cg-linea */
+    width: calc(100% - 80px);
+  }
+}
+
+.novedades {
+  margin-top: 24px;
+  border: 2px solid #000;
+  background: #f9f9f9;
+}
+
+.novedades h2 {
+  background: #000;
+  color: #fff;
+  padding: 10px;
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.linea-card {
+  border-top: 1px solid #000;
+  margin: 0;
+  padding: 10px;
+  background: #f6f6f6;
+}
+
+.linea-card h3 {
+  background: #000;
+  color: #fff;
+  margin: -10px -10px 8px -10px;
+  padding: 6px 10px;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+.linea-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.linea-card li {
+  padding: 6px 0;
+  border-bottom: 1px solid #ddd;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+.linea-card li:last-child {
+  border-bottom: none;
+}
+
+.linea-card b {
+  color: #000;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+@media (max-width: 768px) {
+  .novedades h2 {
+    font-size: 16px;
+  }
+  .linea-card h3 {
+    font-size: 14px;
+  }
+  .linea-card li {
+    font-size: 12px;
+    padding: 5px 0;
+  }
+}
+
+.form-novedad {
+  border: 2px solid #000;
+  background: #f3f3f3;
+  padding: 12px;
+  margin-top: 20px;
+}
+
+.form-novedad h3 {
+  margin-top: 0;
+  background: #000;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 16px;
+}
+
+.form-novedad form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.form-novedad label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  font-size: 13px;
+  flex: 1 1 180px;
+}
+
+.form-novedad label.full {
+  flex: 1 1 100%;
+}
+
+.form-novedad input,
+.form-novedad select,
+.form-novedad textarea {
+  padding: 6px 8px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.form-novedad button {
+  background: #e10600;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.form-novedad button:hover {
+  background: #b40000;
+}
+
+.form-novedad #nvClear {
+  background: #555;
+}
+
+.form-novedad #nvClear:hover {
+  background: #222;
+}
+
+@media (max-width: 768px) {
+  .form-novedad form {
+    flex-direction: column;
+  }
+  .form-novedad label {
+    flex: 1 1 100%;
+  }
+}
+
+/* ===== Controles visualmente consistentes (inputs/select/textarea) ===== */
+.form-novedad input,
+.form-novedad select,
+.form-novedad textarea,
+.cg-form input,
+.cg-form select {
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.form-novedad input:focus,
+.form-novedad select:focus,
+.form-novedad textarea:focus,
+.cg-form input:focus,
+.cg-form select:focus {
+  outline: none;
+  border-color: #e10600;
+  box-shadow: 0 0 0 3px rgba(225,6,0,.18);
+}
+
+/* ===== Separación vertical entre secciones ===== */
+.novedades,
+.cg-form,
+.form-novedad {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+/* ===== Botoneras: más margen superior e inferior ===== */
+.form-novedad .acciones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 10px;   /* ↑ más aire arriba y abajo */
+}
+
+/* En el form del cronograma no hay contenedor de botones, así que doy aire a los botones */
+.cg-form form > button {
+  margin-top: 14px;      /* ↑ separa del resto de controles */
+  margin-bottom: 8px;    /* ↓ aire con lo que sigue */
+}
+
+/* ===== Botones modernos (primario y secundario) ===== */
+.form-novedad button[type="submit"],
+.cg-form form > button[type="submit"] {
+  background: #e10600;
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .18s, box-shadow .18s, transform .04s;
+  box-shadow: 0 1px 0 rgba(0,0,0,.25), inset 0 -2px 0 rgba(0,0,0,.15);
+}
+
+.form-novedad button[type="submit"]:hover,
+.cg-form form > button[type="submit"]:hover {
+  background: #c50500;
+}
+
+.form-novedad button[type="submit"]:active,
+.cg-form form > button[type="submit"]:active {
+  transform: translateY(1px);
+}
+
+.form-novedad button[type="submit"]:focus-visible,
+.cg-form form > button[type="submit"]:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(225,6,0,.35);
+}
+
+/* Secundario (Borrar/Limpiar) */
+#nvClear,
+.cg-form #cgClear {
+  background: #3e3e3e;
+  color: #fff;
+  border: 1px solid #2b2b2b;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .18s, box-shadow .18s, transform .04s;
+}
+
+#nvClear:hover,
+.cg-form #cgClear:hover {
+  background: #2d2d2d;
+}
+
+#nvClear:active,
+.cg-form #cgClear:active {
+  transform: translateY(1px);
+}
+
+#nvClear:focus-visible,
+.cg-form #cgClear:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(0,0,0,.35);
+}
+
+/* ===== Móvil: botones a ancho completo si preferís ese look ===== */
+@media (max-width: 480px) {
+  .form-novedad .acciones button,
+  .cg-form form > button {
+    width: 100%;
+  }
+}
+
+/* Evita que textos largos se salgan en Novedades */
+.linea-card li{
+  max-width: 100%;
+  /* Ajustes de quiebre */
+  overflow-wrap: anywhere;     /* moderno */
+  word-break: break-word;      /* fallback */
+  word-wrap: break-word;       /* legado */
+  hyphens: auto;               /* guiones automáticos si hay diccionario */
+  white-space: normal;         /* que fluya como párrafo */
+  line-height: 1.45;
+}
+
+/* Que la hora no se corte */
+.linea-card li b{
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+/* Por si algún <ul> se achica, que nunca provoque overflow */
+.linea-card ul{
+  min-width: 0;
+}
+
+/* ===== Botón Generar PDF ===== */
+#btnInforme{
+  --mg-red: #e10600;
+  --mg-red-dk: #b80000;
+  --shadow: 0 8px 20px rgba(225, 6, 0, .35);
+  --radius: 12px;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 18px 12px 48px;      /* lugar para el ícono */
+  border: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--mg-red) 0%, var(--mg-red-dk) 100%);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .2px;
+  cursor: pointer;
+  box-shadow: var(--shadow), inset 0 -2px 0 rgba(0,0,0,.18);
+  transition: transform .06s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+/* ícono de impresora */
+#btnInforme::before{
+  content: "🖨️";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.25));
+}
+
+/* brillo sutil al hover */
+#btnInforme:hover{
+  filter: brightness(1.05);
+  box-shadow: 0 10px 28px rgba(225, 6, 0, .45), inset 0 -2px 0 rgba(0,0,0,.18);
+}
+
+/* “clic” cortito */
+#btnInforme:active{
+  transform: translateY(1px);
+}
+
+/* foco accesible */
+#btnInforme:focus-visible{
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.7), var(--shadow);
+}
+
+/* ===== Estado ocupado (generando) ===== */
+#btnInforme.is-busy{
+  cursor: wait;
+  filter: grayscale(.2) brightness(.95);
+}
+
+/* spinner */
+#btnInforme.is-busy::after{
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.55);
+  border-top-color: #fff;
+  transform: translateY(-50%);
+  animation: mg-spin 0.8s linear infinite;
+}
+
+/* texto alternativo cuando está ocupado (opcional) */
+#btnInforme.is-busy > .btn-text-gen{
+  visibility: hidden;
+}
+#btnInforme.is-busy > .btn-text-wip{
+  position: absolute;
+  left: 48px;
+  right: 36px;
+  text-align: left;
+  visibility: visible;
+}
+
+@keyframes mg-spin{
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* Respeto a usuarios con movimiento reducido */
+@media (prefers-reduced-motion: reduce){
+  #btnInforme,
+  #btnInforme:hover{ transition: none; }
+  #btnInforme.is-busy::after{ animation: none; }
+}
+
+/* ===== Botón MODO dentro del encabezado ===== */
+.mode-btn-header{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-right: 8px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: background .2s, transform .1s;
+}
+
+.mode-btn-header:hover{
+  background: #333;
+  transform: translateY(1px);
+}
+
+/* Estado LECTURA */
+.mode-btn-header.is-lectura{
+  background: #004d1f;
+  border-color: #0f7a3b;
+}
+.mode-btn-header.is-lectura .mode-icon::before{ content: "🔒"; }
+.mode-btn-header:not(.is-lectura) .mode-icon::before{ content: "🔓"; }
+
+/* En móvil: más chico */
+@media (max-width: 768px){
+  .mode-btn-header{
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+}
+
+/* ===== Fix para el input de fecha en móviles ===== */
+input[type="date"] {
+  background-color: var(--panel, #1a1f2e);
+  color: var(--ink, #fff);
+  border: 1px solid var(--muted, #777);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 15px;
+  font-family: inherit;
+  width: 100%;
+  appearance: none;           /* limpia estilos del SO */
+  -webkit-appearance: none;   /* Safari / iOS */
+}
+
+input[type="date"]:focus {
+  outline: 2px solid var(--accent, #1170d6);
+  outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+  input[type="date"] {
+    background-color: #fff;   /* asegura contraste en móviles */
+    color: #000;
+  }
+}
+.formatos-acciones{
+  margin: 10px 0 4px;
+  display: flex;
+  gap: 10px;
+}
+
+#btnEditarFormatos, #btnGrabarFormatos{
+  background: #e10600;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#btnEditarFormatos{ background: #3e3e3e; }
+#btnEditarFormatos:hover{ background:#2d2d2d; }
+#btnGrabarFormatos:hover{ background:#c50500; }
+
+/* ===== Botón MODO (visibilidad + clics) ===== */
+.mode-btn-header{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.35rem .6rem;
+  border-radius:.75rem;
+  background:#2b2b2b;     /* tu fondo oscuro */
+  color:#fff;             /* texto visible */
+  border:1px solid #444;
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+  z-index:20;             /* por si algo lo tapa */
+  pointer-events:auto;
+}
+.logo-encabezado{
+  display: flex;
+  align-items: center;
+  gap: 8px;            /* espacio entre botón e imagen */
+}
+
+
+
+
+.mode-btn-header .mode-icon::before{
+  content:"🔓";           /* icono por defecto: carga */
+  display:inline-block;
+  line-height:1;
+}
+.mode-btn-header.is-lectura .mode-icon::before{
+  content:"🔒";           /* lectura */
+}
+
+/* si algún CSS previo escondía el label, lo pisamos */
+.mode-btn-header .mode-label,
+.mode-btn-header .mode-icon{
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+.tabla-produccion td[contenteditable="false"]{
+  background: #efefef;
+  cursor: default;
+}
+
+/* Botón de cierre dentro de cada barra */
+.cg-bar {
+  position: relative;
+  padding-left: 26px; /* lugar para la x */
+}
+.cg-bar .cg-bar-close{
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,.6);
+  background: rgba(0,0,0,.35);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.cg-bar .cg-bar-close:hover{ background: rgba(0,0,0,.55); }
+.cg-bar .cg-bar-close.is-hidden{ display:none; }
+
+.mode-btn-header{
+  white-space: nowrap;     /* no partir el texto */
+  flex-shrink: 0;          /* que no se achique dentro del flex */
+  max-width: none;         /* por si algún estilo lo limita */
+}
+
+.mode-btn-header .mode-label{
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.linea-card li b { margin-right: 6px; }
+
+.linea-card li { display:flex; align-items:center; gap:6px; }
+.nv-del{
+  margin-left:auto; border:0; background:#e10600; color:#fff;
+  width:24px; height:24px; border-radius:6px; cursor:pointer;
+  font-weight:700; line-height:24px;
+}
+.nv-del:hover{ opacity:.9; }
+
+/* Fila de edición */
+.linea-card li .nv-row{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:6px 0;
+  border-bottom:1px solid #e9e9e9;
+}
+
+/* Hora grande y clara */
+.nv-edit-time{
+  width:120px;
+  font-weight:700;
+  height:40px;
+}
+
+/* Textarea cómodo */
+.nv-edit-text{
+  flex:1 1 auto;           /* ocupa todo el ancho restante */
+  min-height:100px;        /* más alto por defecto */
+  font-size:14px;
+  line-height:1.35;
+  padding:8px;
+  box-sizing:border-box;   /* que el padding no achique */
+  resize:vertical;         /* permitir redimensionar si quiere */
+}
+
+/* Ítems de novedades: layout con 2 columnas (hora | texto) */
+.linea-card ul li {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e9e9e9;
+}
+
+/* Modo edición: la grilla sigue igual, pero ocupamos todo el espacio */
+
+
+/* Input hora ocupa toda su celda en alto */
+.nv-edit-time {
+  height: 100%;
+  box-sizing: border-box;
+  font-weight: 700;
+}
+
+/* Textarea ocupa toda la celda (ancho y alto del ítem) */
+.nv-edit-text {
+  width: 100%;
+  height: 100%;
+  min-height: 60px;          /* por si la original es muy baja */
+  box-sizing: border-box;
+  line-height: 1.35;
+  padding: 10px;
+  resize: vertical;          /* puede agrandar si quiere */
+}
+
+
+
+/* ===== TABLA: móvil con 2 filas por línea, conservando el thead ===== */
+@media (max-width: 768px) {
+  /* Header sigue siendo tabla */
+  .tabla-produccion thead { display: table-header-group; }
+  .tabla-produccion thead tr { display: table-row; }
+
+  /* Cada TR del tbody se vuelve una grilla: [TH] + 3 columnas × 2 filas */
+  .tabla-produccion tbody tr {
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 1fr;  /* [LÍNEA] [col2][col3][col4] */
+    grid-auto-rows: minmax(48px, auto);
+    gap: 8px;
+    padding: 8px 6px;
+    align-items: stretch;
+  }
+
+  /* El TH (LÍNEA X) ocupa las dos filas a la izquierda */
+  .tabla-produccion tbody tr > th {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;             /* ignora el width fijo desktop */
+    padding: 6px 8px;
+  }
+
+  /* OJO: el primer TD es el hijo #2 (porque antes está el TH) */
+  /* Fila superior: Sabor 1 / Formato 1 / Velocidad 1 */
+  .tabla-produccion tbody tr > td:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .tabla-produccion tbody tr > td:nth-child(3) { grid-column: 3; grid-row: 1; }
+  .tabla-produccion tbody tr > td:nth-child(4) { grid-column: 4; grid-row: 1; }
+
+  /* Fila inferior: Sabor 2 / Formato 2 / Velocidad 2 */
+  .tabla-produccion tbody tr > td:nth-child(5) { grid-column: 2; grid-row: 2; }
+  .tabla-produccion tbody tr > td:nth-child(6) { grid-column: 3; grid-row: 2; }
+  .tabla-produccion tbody tr > td:nth-child(7) { grid-column: 4; grid-row: 2; }
+
+  /* Estilo de celdas en mobile */
+  .tabla-produccion tbody tr > td {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+    background: #d9d9d9;
+    border-radius: 4px;
+    padding: 8px;
+    min-height: 56px;
+    word-break: break-word;
+  }
+
+  /* Etiquetas (si no usás data-label en HTML) */
+  .tabla-produccion tbody tr > td:nth-child(2)::before { content: "Sabor 1"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+  .tabla-produccion tbody tr > td:nth-child(3)::before { content: "Formato 1"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+  .tabla-produccion tbody tr > td:nth-child(4)::before { content: "Velocidad nominal 1"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+  .tabla-produccion tbody tr > td:nth-child(5)::before { content: "Sabor 2"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+  .tabla-produccion tbody tr > td:nth-child(6)::before { content: "Formato 2"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+  .tabla-produccion tbody tr > td:nth-child(7)::before { content: "Velocidad nominal 2"; font-size:11px; color:#606060; font-weight:600; margin-bottom:4px; display:block; }
+}
+
+/* ===== TABLA: móvil, 2 filas por línea, SIN desbordes ===== */
+
+
+/* Ajuste extra para pantallas MUY chicas */
+@media (max-width: 380px) {
+  .tabla-produccion tbody tr {
+    grid-template-columns: 78px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+    gap: 5px;
+    padding: 5px 3px;
+  }
+}
+
+/* ===== MÓVIL: mantener el encabezado con logo y ocultar SOLO la fila de títulos ===== */
+@media (max-width: 768px) {
+  /* Mantener visible el thead */
+  .tabla-produccion thead { display: table-header-group; }
+
+  /* Si tu fila de logo/turnos/fecha es <tr class="encabezado-con-logo"> => mostrarla */
+  .tabla-produccion thead tr.encabezado-con-logo { display: table-row; }
+
+  /* Ocultar la fila de títulos de columnas (Sabor/Formato/Velocidad).
+     Asegurate de tener class="encabezado-secundario" en ese <tr>.
+     Usamos dos selectores por si la clase está en <thead> o en <tr>. */
+  .tabla-produccion thead.encabezado-secundario,
+  .tabla-produccion thead tr.encabezado-secundario { display: none; }
+
+  /* Si querés que el header negro quede fijo al hacer scroll en móvil: */
+  .encabezado-con-logo { position: sticky; top: 0; z-index: 5; }
+}
+
+/* Móvil: compatibilidad cuando la clase está en el <th> */
+@media (max-width: 768px) {
+  .tabla-produccion thead { display: table-header-group; }
+
+  /* mostrar la fila del logo aunque la clase esté en el <th> */
+  .tabla-produccion thead tr.encabezado-superior,
+  .tabla-produccion thead th.encabezado-con-logo { display: table-row; }
+
+  /* ocultar la fila de títulos */
+  .tabla-produccion thead tr.encabezado-secundario { display: none; }
+
+  .encabezado-con-logo { position: sticky; top: 0; z-index: 5; }
+}
+
+/* Celdas con contenido */
+.tabla-produccion td.has-data {
+  background-color: #c6f6c3 !important; /* verde suave */
+  color: #0a0a0a;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+/* ===== Espaciado general del formulario ===== */
+.cg-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Campos más cómodos */
+.cg-form select,
+.cg-form input {
+  min-width: 120px;
+  height: 36px;
+  padding: 6px 8px;
+  font-size: 15px;
+}
+
+/* Botones con espacio */
+.cg-form button {
+  height: 38px;
+  font-size: 15px;
+  padding: 6px 12px;
+}
+
+/* ===== En pantallas pequeñas ===== */
+@media (max-width: 768px) {
+  .cg-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .cg-form label {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .cg-form select,
+  .cg-form input,
+  .cg-form button {
+    width: 100%;
+    font-size: 16px;
+  }
+
+  #btnInforme {
+    width: 100%;
+    font-size: 17px;
+    margin-top: 8px;
+  }
+}
+
+/* Caja del bloque (igual que .form-novedad) */
+.cg-form{
+  border: 2px solid #000;
+  background: #f3f3f3;
+  padding: 12px;
+  margin-top: 20px;
+}
+
+/* Título del bloque con fondo negro */
+.cg-form h4{
+  margin: 0 0 10px 0;         /* sin margen arriba, un poco abajo */
+  background: #000;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+/* ===== NOVEDADES: mejor aprovechamiento de espacio ===== */
+.linea-card {
+  padding: 6px 8px;        /* menos relleno */
+}
+
+.linea-card ul li {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;  /* hora | texto | botón */
+  gap: 6px;
+  padding: 6px 8px;        /* menos espacio vertical */
+  align-items: flex-start;
+}
+
+.linea-card li b {
+  font-size: 12px;         /* hora más compacta */
+  margin-right: 4px;
+}
+
+.linea-card li p,
+.linea-card li span,
+.linea-card li div {
+  margin: 0;
+  line-height: 1.3;        /* texto más apretado pero legible */
+  font-size: 13px;
+}
+
+.nv-del {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 11px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+/* En móviles: menos padding todavía */
+@media (max-width: 768px) {
+  .linea-card ul li {
+    grid-template-columns: 70px 1fr 22px;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+  .linea-card li b {
+    font-size: 11px;
+  }
+  .linea-card li p,
+  .linea-card li span,
+  .linea-card li div {
+    font-size: 12px;
+    line-height: 1.25;
+  }
+}
+
+.cg-lane {
+  position: relative;
+  overflow: visible !important;
+  min-height: 40px;
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informe de Producción</title>
+  <link rel="stylesheet" href="estilos.css" />
+  <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<meta name="theme-color" content="#e10600">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+  <main class="tabla-contenedor">
+
+    <!-- ===== ENCABEZADO ===== -->
+    <table class="tabla-produccion">
+      <thead>
+        <tr class="encabezado-superior">
+          <th colspan="7" class="encabezado-con-logo">
+            <div class="encabezado-flex">
+              <div class="inputs-encabezado">
+                <select id="turno" class="encabezado-input">
+                  <option value=""></option>
+                  <option>TURNO A</option>
+                  <option>TURNO B</option>
+                  <option>TURNO C</option>
+                  <option>TURNO D</option>
+                </select>
+                <select id="tn" class="encabezado-input">
+                  <option value=""></option>
+                  <option>TM</option>
+                  <option>TT</option>
+                  <option>TN</option>
+                </select>
+                <input type="date" id="fecha" class="encabezado-input" />
+                <input type="text" id="dia" class="encabezado-input" readonly placeholder="Día" />
+              </div>
+              <div class="logo-encabezado">
+              <button id="modeBtn" class="mode-btn-header" type="button">
+                          <span class="mode-icon" aria-hidden="true"></span>
+              <span class="mode-label"></span>
+              </button>
+
+  <img src="multimedia/Captura.JPG" alt="MG Monte Grande" />
+</div>
+
+            </div>
+          </th>
+        </tr>
+
+        <tr class="encabezado-secundario">
+  <th></th>
+  <th>Sabor 1</th>
+  <th>Formato 1</th>
+  <th>Velocidad nominal 1</th>
+  <th>Sabor 2</th>
+  <th>Formato 2</th>
+  <th>Velocidad nominal 2</th>
+</tr>
+</thead>
+
+<tbody>
+  <tr><th>LÍNEA 1</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 2</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 3</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 4</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 5</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 6</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+  <tr><th>LÍNEA 7</th><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td><td contenteditable></td></tr>
+</tbody>
+
+      
+
+
+</table>
+
+    <!-- Acciones de la TABLA de formatos (solo visibles en MODO CARGA) -->
+     <div class="formatos-acciones">
+  <button id="btnEditarFormatos" type="button" title="Mostrar todas las líneas">Editar</button>
+  <button id="btnGrabarFormatos" type="button" title="Guardar y mostrar solo completadas">Grabar</button>
+</div>
+
+  <!-- ===== CRONOGRAMA ===== -->
+    <section id="cronograma" class="cronograma">
+      <header class="cronograma-head">
+        <h3>INICIO Y CORTE DE PRODUCCIÓN</h3>
+        <div class="cronograma-controles">
+          <label class="ctrl">
+            Rango:
+            <select id="cgRango">
+              <option value="06-18">06:00 → 18:00</option>
+              <option value="18-06">18:00 → 06:00</option>
+            </select>
+          </label>
+          
+        </div>
+      </header>
+
+      <div class="cg-eje" id="cgEje"></div>
+      <div class="cg-grid">
+        <div class="cg-row"><div class="cg-linea">LÍNEA 1</div><div class="cg-lane" data-linea="1"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 2</div><div class="cg-lane" data-linea="2"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 3</div><div class="cg-lane" data-linea="3"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 4</div><div class="cg-lane" data-linea="4"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 5</div><div class="cg-lane" data-linea="5"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 6</div><div class="cg-lane" data-linea="6"></div></div>
+        <div class="cg-row"><div class="cg-linea">LÍNEA 7</div><div class="cg-lane" data-linea="7"></div></div>
+      </div>
+    </section>
+
+    <!-- ===== FORMULARIO DE CARGA ===== -->
+    <div class="cg-form">
+      <h4>Cargar producción por línea</h4>
+      <form id="formBarra">
+        <label>Línea: 
+          <select id="cgLinea">
+            <option value="" selected disabled>Seleccionar</option>
+            <option value="1">LÍNEA 1</option>
+            <option value="2">LÍNEA 2</option>
+            <option value="3">LÍNEA 3</option>
+            <option value="4">LÍNEA 4</option>
+            <option value="5">LÍNEA 5</option>
+            <option value="6">LÍNEA 6</option>
+            <option value="7">LÍNEA 7</option>
+          </select>
+        </label>
+        <label>Sabor: <input type="text" id="cgSabor" placeholder="Ej: POW HF SOUR 500×6"></label>
+        <label>Inicio: <input type="time" id="cgInicio"></label>
+        <label>Fin: <input type="time" id="cgFin"></label>
+        <button type="submit">Agregar</button>
+        <button type="button" id="cgClear">Limpiar todo</button>
+        <button id="btnInforme" type="button">
+          <span class="btn-text-gen">Generar PDF</span>
+          <span class="btn-text-wip" style="visibility:hidden;">Generando…</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- ===== NOVEDADES ===== -->
+    <section id="novedades" class="novedades">
+      <h2>NOVEDADES DEL TURNO</h2>
+      <div class="linea-card"><h3>LÍNEA 1</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 2</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 3</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 4</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 5</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 6</h3><ul></ul></div>
+      <div class="linea-card"><h3>LÍNEA 7</h3><ul></ul></div>
+      <div class="linea-card"><h3>SOPLADO</h3><ul></ul></div>
+      <div class="linea-card"><h3>ELABORACIÓN</h3><ul></ul></div>
+      <div class="linea-card"><h3>AUXILIARES</h3><ul></ul></div>
+      <div class="linea-card"><h3>A &amp; E</h3><ul></ul></div>
+      <div class="linea-card"><h3>PLANEAMIENTO</h3><ul></ul></div>
+    </section>
+
+    <!-- ===== FORMULARIO DE NOVEDADES ===== -->
+    <section class="form-novedad">
+      <h3>Agregar novedad</h3>
+      <form id="formNovedad">
+        <label>Línea / Sector:
+          <select id="nvLinea" required>
+            <option value="">— Seleccionar —</option>
+            <option>LÍNEA 1</option><option>LÍNEA 2</option><option>LÍNEA 3</option><option>LÍNEA 4</option>
+            <option>LÍNEA 5</option><option>LÍNEA 6</option><option>LÍNEA 7</option>
+            <option>SOPLADO</option><option>ELABORACIÓN</option><option>AUXILIARES</option>
+            <option>A &amp; E</option><option>PLANEAMIENTO</option>
+          </select>
+        </label>
+        <label>Hora:<select id="nvHora" required></select></label>
+
+        <label class="full">Descripción:
+          <textarea id="nvTexto" rows="2" placeholder="Detalle de la novedad..." required></textarea>
+        </label>
+        <div class="acciones">
+          <button type="submit">Agregar</button>
+          <button type="button" id="nvClear">Borrar todo</button>
+          <button type="button" id="nvCancelEdit" style="display:none;">Cancelar edición</button>
+
+        </div>
+      </form>
+    </section>
+  </main>
+
+  
+  <script type="module" src="firebase-config.js"></script>
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
