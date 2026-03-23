@@ -43,6 +43,19 @@ const cg = {
   }
 };
 
+function saveCgState() {
+  const rango = document.getElementById('cgRango')?.value || '06-18';
+  localStorage.setItem(CG_STATE_KEY, JSON.stringify({ rango }));
+}
+
+function restoreCgState() {
+  const saved = JSON.parse(localStorage.getItem(CG_STATE_KEY) || '{}');
+  const rangoSel = document.getElementById('cgRango');
+  if (rangoSel && saved.rango) {
+    rangoSel.value = saved.rango;
+  }
+}
+
 function cgBuildAxis() {
   const eje = document.getElementById('cgEje');
   if (!eje) return;
@@ -164,7 +177,7 @@ function cgClear() {
     lane.style.height = '40px';
   });
 
-  ["corridas", "cronograma_v1", "CG_STATE_KEY"].forEach(k => localStorage.removeItem(k));
+  ["corridas", CG_STATE_KEY].forEach(k => localStorage.removeItem(k));
   setTimeout(() => document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML = ''), 100);
 }
 
@@ -183,13 +196,25 @@ function restoreCorridas() {
 }
 
 function cgInit() {
+  restoreCgState();
   cgBuildAxis();
   restoreCorridas();
+  buildNvHoraOptions();
+  renderNovedades();
 
   const rangoSel = document.getElementById('cgRango');
-  rangoSel?.addEventListener('change', () => { cgBuildAxis(); restoreCorridas(); });
+  rangoSel?.addEventListener('change', () => {
+    saveCgState();
+    cgBuildAxis();
+    restoreCorridas();
+    buildNvHoraOptions();
+    renderNovedades();
+  });
 
-  window.addEventListener('resize', () => { cgBuildAxis(); restoreCorridas(); });
+  window.addEventListener('resize', () => {
+    cgBuildAxis();
+    restoreCorridas();
+  });
 }
 document.addEventListener('DOMContentLoaded', cgInit);
 
