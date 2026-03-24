@@ -4,7 +4,6 @@
    - PDF: html2canvas + jsPDF (CDN)
    ========================= */
 
-// No-op para compatibilidad con llamadas existentes
 window.syncNow = window.syncNow || function(){};
 
 /* ======== Fecha / Día automático ======== */
@@ -35,11 +34,14 @@ const CG_STATE_KEY = 'cronograma_v1';
 
 const cg = {
   rango: '06-18',
-  toMin(hhmm) { const [h,m]=hhmm.split(':').map(Number); return h*60+(m||0); },
+  toMin(hhmm) {
+    const [h,m] = hhmm.split(':').map(Number);
+    return h * 60 + (m || 0);
+  },
   relMin(hhmm, rango) {
     const m = this.toMin(hhmm);
-    if (rango === '06-18') return m - 6*60;
-    return (m >= 18*60) ? (m - 18*60) : (m + (24*60 - 18*60));
+    if (rango === '06-18') return m - 6 * 60;
+    return (m >= 18 * 60) ? (m - 18 * 60) : (m + (24 * 60 - 18 * 60));
   }
 };
 
@@ -59,6 +61,7 @@ function restoreCgState() {
 function cgBuildAxis() {
   const eje = document.getElementById('cgEje');
   if (!eje) return;
+
   eje.innerHTML = '';
   const rango = document.getElementById('cgRango')?.value || '06-18';
   const horas = [];
@@ -85,7 +88,6 @@ function adjustLaneHeight(lane) {
   lane.style.height = "40px";
 }
 
-// ¿Estoy en modo lectura?
 function isLectura() {
   const btn = document.getElementById("modeBtn");
   return !!btn && btn.classList.contains("is-lectura");
@@ -99,7 +101,7 @@ function updateBarDeleteVisibility(show) {
 
 function removeCorrida(linea, inicio, fin, sabor) {
   const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
-  const next  = saved.filter(c => !(c.linea==linea && c.inicio==inicio && c.fin==fin && c.sabor==sabor));
+  const next = saved.filter(c => !(c.linea == linea && c.inicio == inicio && c.fin == fin && c.sabor == sabor));
   localStorage.setItem("corridas", JSON.stringify(next));
 }
 
@@ -109,7 +111,6 @@ function cgAddBar(linea, inicio, fin, sabor, restored = false) {
 
   const rangeText = `${inicio}|${fin}`;
 
-  // Eliminar duplicados por seguridad
   Array.from(lane.querySelectorAll(".cg-bar")).forEach(b => {
     if (b.dataset.timeRange === rangeText && b.dataset.sabor === sabor) b.remove();
   });
@@ -127,14 +128,14 @@ function cgAddBar(linea, inicio, fin, sabor, restored = false) {
 
   if (wrap) {
     startMin = iniMin - startRange;
-    endMin   = finMin - startRange;
+    endMin = finMin - startRange;
   } else {
     startMin = (iniMin >= startRange) ? iniMin - startRange : (1440 - startRange) + iniMin;
-    endMin   = (finMin >= startRange) ? finMin - startRange : (1440 - startRange) + finMin;
+    endMin = (finMin >= startRange) ? finMin - startRange : (1440 - startRange) + finMin;
   }
 
   startMin = Math.max(0, startMin);
-  endMin   = Math.min(total, endMin);
+  endMin = Math.min(total, endMin);
 
   const left = (startMin / total) * 100;
   const width = Math.max(1, ((endMin - startMin) / total) * 100);
@@ -182,10 +183,11 @@ function cgClear() {
 }
 
 function restoreCorridas() {
-  document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML='');
+  document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML = '');
   const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
   saved.forEach(c => cgAddBar(c.linea, c.inicio, c.fin, c.sabor, true));
   updateBarDeleteVisibility(!isLectura());
+
   document.querySelectorAll(".cg-lane").forEach(lane => adjustLaneHeight(lane));
 
   document.querySelectorAll(".cg-lane").forEach(lane => {
@@ -228,6 +230,7 @@ const cgClearBtn = document.getElementById('cgClear');
 
 form?.addEventListener('submit', e => {
   e.preventDefault();
+
   const linea = cgLinea?.value;
   const sabor = (cgSabor?.value || '').trim();
   const ini = cgInicio?.value;
@@ -249,7 +252,7 @@ form?.addEventListener('submit', e => {
     }
   } else {
     const validoInicio = (iniH >= 18 && iniH <= 23) || (iniH >= 0 && iniH < 6);
-    const validoFin    = (finH >= 18 && finH <= 23) || (finH >= 0 && finH <= 6);
+    const validoFin = (finH >= 18 && finH <= 23) || (finH >= 0 && finH <= 6);
     if (!validoInicio || !validoFin) {
       alert("⚠️ Los horarios deben estar entre 18:00 y 06:00.");
       return;
@@ -280,25 +283,26 @@ const nvClear = document.getElementById("nvClear");
   el.parentNode.replaceChild(sel, el);
 })();
 
-function buildNvHoraOptions(){
+function buildNvHoraOptions() {
   const sel = document.getElementById("nvHora");
   const rangoSel = document.getElementById("cgRango");
   if (!sel || !rangoSel) return;
 
   const rango = rangoSel.value;
   const opts = [];
-  if (rango === "06-18"){
-    for (let h=6; h<18; h++){
-      const v = String(h).padStart(2,"0") + ":00";
+
+  if (rango === "06-18") {
+    for (let h = 6; h < 18; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
       opts.push(`<option value="${v}">${v}</option>`);
     }
   } else {
-    for (let h=18; h<=23; h++){
-      const v = String(h).padStart(2,"0") + ":00";
+    for (let h = 18; h <= 23; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
       opts.push(`<option value="${v}">${v}</option>`);
     }
-    for (let h=0; h<=6; h++){
-      const v = String(h).padStart(2,"0") + ":00";
+    for (let h = 0; h <= 6; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
       opts.push(`<option value="${v}">${v}</option>`);
     }
   }
@@ -324,6 +328,7 @@ let NV_EDITING = false;
 function rangoActual() {
   return document.getElementById("cgRango")?.value === "18-06" ? "18-06" : "06-18";
 }
+
 function horaEnPuntoValida(hhmm) {
   if (!/^\d{2}:\d{2}$/.test(hhmm)) return false;
   const [h, m] = hhmm.split(":").map(Number);
@@ -331,21 +336,26 @@ function horaEnPuntoValida(hhmm) {
   if (rangoActual() === "06-18") return h >= 6 && h <= 18;
   return (h >= 18 && h <= 23) || (h >= 0 && h <= 6);
 }
+
 function ordenHoraParaRango(hora) {
   if (!hora) return 999;
   const h = parseInt(hora.split(":")[0], 10);
   const rango = rangoActual();
+
   if (rango === "06-18") {
     if (h >= 6 && h <= 18) return h - 6;
     return 999;
   }
+
   if (rango === "18-06") {
     if (h >= 18 && h <= 23) return h - 18;
-    if (h >= 0 && h <= 6)   return h + 6;
+    if (h >= 0 && h <= 6) return h + 6;
     return 999;
   }
+
   return h;
 }
+
 function sortNovedadesArray(list) {
   list.sort((a, b) => {
     const la = (a.linea || "");
@@ -423,7 +433,7 @@ function enterNvEditMode() {
     const textoActual = li.dataset.texto || li.querySelector(".nv-text")?.textContent || "";
 
     li.dataset.originalLinea = linea;
-    li.dataset.originalHora  = horaActual;
+    li.dataset.originalHora = horaActual;
     li.dataset.originalTexto = textoActual;
 
     li.classList.add("editing");
@@ -468,18 +478,26 @@ function saveNvEdits() {
 
   for (const li of items) {
     const inHora = li.querySelector('input[type="time"]');
-    const ta     = li.querySelector('textarea');
+    const ta = li.querySelector('textarea');
     if (!inHora || !ta) continue;
 
     const oldLinea = li.dataset.originalLinea || "";
-    const oldHora  = li.dataset.originalHora  || "";
+    const oldHora = li.dataset.originalHora || "";
     const oldTexto = li.dataset.originalTexto || "";
 
-    const newHora  = (inHora.value || "").trim();
+    const newHora = (inHora.value || "").trim();
     const newTexto = (ta.value || "").trim();
 
-    if (!newTexto) { alert("Hay una novedad sin descripción."); ta.focus(); return; }
-    if (!horaEnPuntoValida(newHora)) { alert("Hay una hora fuera de la franja o no es 'en punto'."); inHora.focus(); return; }
+    if (!newTexto) {
+      alert("Hay una novedad sin descripción.");
+      ta.focus();
+      return;
+    }
+    if (!horaEnPuntoValida(newHora)) {
+      alert("Hay una hora fuera de la franja o no es 'en punto'.");
+      inHora.focus();
+      return;
+    }
 
     const idx = list.findIndex(nv => nv.linea === oldLinea && nv.hora === oldHora && nv.texto === oldTexto);
     if (idx !== -1) list[idx] = { linea: oldLinea, hora: newHora, texto: newTexto };
@@ -502,23 +520,29 @@ function renderNovedades() {
   ensureNvControls();
 
   const bar = document.querySelector(".nv-actions");
-  const lectura = document.getElementById("modeBtn")?.classList.contains("is-lectura");
-  if (bar) bar.style.display = lectura ? "none" : "flex";
+  const isLectura = document.getElementById("modeBtn")?.classList.contains("is-lectura");
+  if (bar) bar.style.display = isLectura ? "none" : "flex";
 
-  document.querySelectorAll(".linea-card ul").forEach(u => u.innerHTML = "");
+  const cards = Array.from(document.querySelectorAll(".linea-card"));
+
+  cards.forEach(card => {
+    const ul = card.querySelector("ul");
+    if (ul) ul.innerHTML = "";
+  });
 
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
   sortNovedadesArray(saved);
 
   saved.forEach(({ linea, hora, texto }) => {
-    const card = Array.from(document.querySelectorAll(".linea-card"))
-      .find(c => c.querySelector("h3")?.textContent.trim() === linea);
+    const card = cards.find(c => c.querySelector("h3")?.textContent.trim() === linea);
     if (!card) return;
 
     const ul = card.querySelector("ul");
+    if (!ul) return;
+
     const li = document.createElement("li");
     li.dataset.linea = linea;
-    li.dataset.hora  = hora;
+    li.dataset.hora = hora;
     li.dataset.texto = texto;
 
     const b = document.createElement("b");
@@ -544,21 +568,43 @@ function renderNovedades() {
       e.stopPropagation();
       if (confirm("¿Eliminar esta novedad?")) deleteNovedad(linea, hora, texto);
     });
-    if (lectura) btnDel.style.display = "none";
+
+    if (isLectura) btnDel.style.display = "none";
 
     wrap.appendChild(spanTxt);
     wrap.appendChild(btnDel);
 
     li.appendChild(b);
     li.appendChild(wrap);
-    ul?.appendChild(li);
+    ul.appendChild(li);
   });
+
+  cards.forEach(card => {
+    const ul = card.querySelector("ul");
+    const tieneItems = !!ul && ul.children.length > 0;
+
+    if (isLectura) {
+      card.style.display = tieneItems ? "" : "none";
+    } else {
+      card.style.display = "";
+    }
+  });
+
+  const seccionNovedades = document.getElementById("novedades");
+  const hayAlgunaVisible = cards.some(card => card.style.display !== "none");
+
+  if (seccionNovedades && isLectura) {
+    seccionNovedades.style.display = hayAlgunaVisible ? "" : "none";
+  } else if (seccionNovedades) {
+    seccionNovedades.style.display = "";
+  }
 }
 
 function clearNovedades() {
   if (!confirm("¿Borrar todas las novedades guardadas?")) return;
   localStorage.removeItem(FORM_KEY);
   document.querySelectorAll(".linea-card ul").forEach(u => u.innerHTML = "");
+  renderNovedades();
 }
 
 function addNovedad(linea, hora, texto) {
@@ -583,22 +629,33 @@ formNovedad?.addEventListener("submit", e => {
   e.preventDefault();
 
   const selHora = document.getElementById("nvHora");
-  if (selHora && selHora.tagName.toLowerCase() === "select" && selHora.options.length === 0) buildNvHoraOptions();
+  if (selHora && selHora.tagName.toLowerCase() === "select" && selHora.options.length === 0) {
+    buildNvHoraOptions();
+  }
 
   const linea = (nvLinea?.value || "").trim();
-  const hora  = (document.getElementById("nvHora")?.value || "").trim();
+  const hora = (document.getElementById("nvHora")?.value || "").trim();
   const texto = (nvTexto?.value || "").trim();
 
   const rango = document.getElementById("cgRango")?.value || "06-18";
 
-  if (!linea || !hora || !texto) { alert("Por favor completá todos los campos."); return; }
-  if (!/^\d{2}:00$/.test(hora)) { alert("Usá horas en punto (HH:00)."); return; }
+  if (!linea || !hora || !texto) {
+    alert("Por favor completá todos los campos.");
+    return;
+  }
+  if (!/^\d{2}:00$/.test(hora)) {
+    alert("Usá horas en punto (HH:00).");
+    return;
+  }
 
   const h = parseInt(hora.split(":")[0], 10);
   let valido = false;
   if (rango === "06-18" && h >= 6 && h < 18) valido = true;
   if (rango === "18-06" && (h >= 18 || h < 6)) valido = true;
-  if (!valido) { alert("⚠️ La hora ingresada está fuera del rango seleccionado."); return; }
+  if (!valido) {
+    alert("⚠️ La hora ingresada está fuera del rango seleccionado.");
+    return;
+  }
 
   addNovedad(linea, hora, texto);
   formNovedad.reset();
@@ -615,56 +672,244 @@ cgClearBtn?.addEventListener("click", () => cgClear());
 const TABLA_KEY = "tabla_produccion_v1";
 const TABLA_FILTRO_KEY = "tabla_filtrar_completas_v1";
 
+/* ===== Formatos + velocidad nominal automática ===== */
+const FORMATOS_POR_LINEA = {
+  "LÍNEA 1": {
+    "500x6": "25200",
+    "300x6": "25200",
+    "995x6": "18000",
+    "1000x6": "18000",
+    "1500x4": "12000"
+  },
+  "LÍNEA 2": {
+    "220x8": "57000",
+    "354x6": "57000",
+    "473x6": "45000"
+  },
+  "LÍNEA 3": {
+    "300x6": "16980",
+    "500x6": "19200",
+    "591x6": "19200",
+    "600x6": "19200",
+    "991x6": "13980",
+    "1500x6": "10800",
+    "2250x6": "9000"
+  },
+  "LÍNEA 4": {},
+  "LÍNEA 5": {
+    "1000x8": "15000"
+  },
+  "LÍNEA 6": {
+    "200x24": "24000"
+  },
+  "LÍNEA 7": {
+    "1500x6": "13800",
+    "2250x6": "9000"
+  }
+};
+
+function getLineaNameFromRow(tr) {
+  return tr.querySelector("th")?.textContent.trim() || "";
+}
+
+function getVelocidadPorFormato(linea, formato) {
+  return FORMATOS_POR_LINEA[linea]?.[formato] || "";
+}
+
+function createFormatoSelect(linea, slot) {
+  const select = document.createElement("select");
+  select.className = "td-formato-select";
+  select.dataset.slot = String(slot);
+
+  const formatos = Object.keys(FORMATOS_POR_LINEA[linea] || {});
+  const opts = [`<option value=""></option>`].concat(
+    formatos.map(f => `<option value="${f}">${f}</option>`)
+  );
+
+  select.innerHTML = opts.join("");
+
+  select.addEventListener("change", () => {
+    const tr = select.closest("tr");
+    if (!tr) return;
+
+    const tds = tr.querySelectorAll("td");
+    const velTd = slot === 1 ? tds[2] : tds[5];
+    const velInput = velTd?.querySelector(".td-velocidad-input");
+
+    if (velInput) {
+      velInput.value = getVelocidadPorFormato(linea, select.value);
+    }
+
+    saveTabla();
+  });
+
+  return select;
+}
+
+function createVelocidadInput(slot) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "td-velocidad-input";
+  input.dataset.slot = String(slot);
+  input.readOnly = true;
+  input.tabIndex = -1;
+  return input;
+}
+
+function initTablaFormatos() {
+  document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
+    const linea = getLineaNameFromRow(tr);
+    const tds = tr.querySelectorAll("td");
+    if (tds.length < 6) return;
+
+    const formato1Td = tds[1];
+    const vel1Td = tds[2];
+    const formato2Td = tds[4];
+    const vel2Td = tds[5];
+
+    formato1Td.classList.add("td-formato");
+    formato2Td.classList.add("td-formato");
+    vel1Td.classList.add("td-velocidad");
+    vel2Td.classList.add("td-velocidad");
+
+    if (!formato1Td.querySelector(".td-formato-select")) {
+      formato1Td.innerHTML = "";
+      formato1Td.appendChild(createFormatoSelect(linea, 1));
+    }
+
+    if (!vel1Td.querySelector(".td-velocidad-input")) {
+      vel1Td.innerHTML = "";
+      vel1Td.appendChild(createVelocidadInput(1));
+    }
+
+    if (!formato2Td.querySelector(".td-formato-select")) {
+      formato2Td.innerHTML = "";
+      formato2Td.appendChild(createFormatoSelect(linea, 2));
+    }
+
+    if (!vel2Td.querySelector(".td-velocidad-input")) {
+      vel2Td.innerHTML = "";
+      vel2Td.appendChild(createVelocidadInput(2));
+    }
+  });
+}
+
+function getTdValue(td) {
+  if (!td) return "";
+
+  const select = td.querySelector("select");
+  if (select) return select.value.trim();
+
+  const input = td.querySelector("input");
+  if (input) return input.value.trim();
+
+  return td.textContent.trim();
+}
+
+function setTdValue(td, value) {
+  if (!td) return;
+
+  const select = td.querySelector("select");
+  if (select) {
+    select.value = value || "";
+    select.dispatchEvent(new Event("change"));
+    return;
+  }
+
+  const input = td.querySelector("input");
+  if (input) {
+    input.value = value || "";
+    return;
+  }
+
+  td.textContent = value || "";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initTablaFormatos();
   restoreTabla();
-  document.querySelectorAll(".tabla-produccion td[contenteditable]").forEach(td => td.addEventListener("input", saveTabla));
+
+  document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
+    const tds = tr.querySelectorAll("td");
+
+    [tds[0], tds[3]].forEach(td => {
+      if (td) td.addEventListener("input", saveTabla);
+    });
+
+    [tds[1], tds[4]].forEach(td => {
+      const sel = td?.querySelector("select");
+      if (sel) sel.addEventListener("change", saveTabla);
+    });
+  });
 });
 
 function saveTabla() {
   const filas = [];
   document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
     const linea = tr.querySelector("th")?.textContent.trim() || "";
-    const celdas = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
+    const celdas = Array.from(tr.querySelectorAll("td")).map(td => getTdValue(td));
     filas.push({ linea, celdas });
   });
+
   localStorage.setItem(TABLA_KEY, JSON.stringify(filas));
   resaltarCeldasConDatos();
 }
 
 function resaltarCeldasConDatos() {
   document.querySelectorAll(".tabla-produccion tbody td").forEach(td => {
-    const texto = td.textContent.trim();
-    td.classList.toggle("has-data", texto.length > 0);
+    const valor = getTdValue(td).trim();
+    td.classList.toggle("has-data", valor !== "");
   });
 }
 
 function restoreTabla() {
   const saved = JSON.parse(localStorage.getItem(TABLA_KEY) || "[]");
+
   saved.forEach(({ linea, celdas }) => {
     const fila = Array.from(document.querySelectorAll(".tabla-produccion tbody tr"))
       .find(tr => tr.querySelector("th")?.textContent.trim() === linea);
-    if (fila) {
-      const tds = fila.querySelectorAll("td");
-      for (let i = 0; i < tds.length; i++) tds[i].textContent = (celdas && celdas[i]) ? celdas[i] : "";
+
+    if (!fila) return;
+
+    const tds = fila.querySelectorAll("td");
+    for (let i = 0; i < tds.length; i++) {
+      setTdValue(tds[i], (celdas && celdas[i]) ? celdas[i] : "");
     }
   });
+
   resaltarCeldasConDatos();
 
+  const isLecturaNow = document.getElementById("modeBtn")?.classList.contains("is-lectura");
   const onlyCompletedStored = localStorage.getItem(TABLA_FILTRO_KEY) === "true";
-  const onlyCompleted = document.getElementById("modeBtn")?.classList.contains("is-lectura") ? true : onlyCompletedStored;
+  const onlyCompleted = isLecturaNow ? true : onlyCompletedStored;
   aplicarFiltroFilasCompletadas(onlyCompleted);
 }
 
 function filaTieneContenido(tr) {
-  const celdas = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
-  return celdas.some(txt => txt.length > 0);
+  const tds = tr.querySelectorAll("td");
+  if (tds.length < 6) return false;
+
+  const sabor1 = getTdValue(tds[0]);
+  const formato1 = getTdValue(tds[1]);
+  const vel1 = getTdValue(tds[2]);
+  const sabor2 = getTdValue(tds[3]);
+  const formato2 = getTdValue(tds[4]);
+  const vel2 = getTdValue(tds[5]);
+
+  const bloque1Completo = !!(sabor1 || formato1 || vel1);
+  const bloque2Completo = !!(sabor2 || formato2 || vel2);
+
+  return bloque1Completo || bloque2Completo;
 }
 
 function aplicarFiltroFilasCompletadas(onlyCompleted) {
-  document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
+  const filas = document.querySelectorAll(".tabla-produccion tbody tr");
+
+  filas.forEach(tr => {
     const visible = !onlyCompleted || filaTieneContenido(tr);
     tr.style.display = visible ? "" : "none";
   });
+
   localStorage.setItem(TABLA_FILTRO_KEY, onlyCompleted ? "true" : "false");
 }
 
@@ -672,9 +917,40 @@ let TABLE_EDITING = false;
 
 function setTableEditing(on) {
   TABLE_EDITING = !!on;
-  document.querySelectorAll(".tabla-produccion tbody td").forEach(td => {
-    td.setAttribute("contenteditable", on ? "true" : "false");
-    td.classList.toggle("is-editing", on);
+
+  document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
+    const tds = tr.querySelectorAll("td");
+
+    const sabor1 = tds[0];
+    const formato1 = tds[1];
+    const vel1 = tds[2];
+    const sabor2 = tds[3];
+    const formato2 = tds[4];
+    const vel2 = tds[5];
+
+    [sabor1, sabor2].forEach(td => {
+      if (!td) return;
+      td.setAttribute("contenteditable", on ? "true" : "false");
+      td.classList.toggle("is-editing", on);
+    });
+
+    [formato1, formato2].forEach(td => {
+      if (!td) return;
+      td.setAttribute("contenteditable", "false");
+      td.classList.toggle("is-disabled-select", !on);
+
+      const sel = td.querySelector(".td-formato-select");
+      if (sel) sel.disabled = !on;
+    });
+
+    [vel1, vel2].forEach(td => {
+      if (!td) return;
+      td.setAttribute("contenteditable", "false");
+      td.classList.remove("is-editing");
+
+      const inp = td.querySelector(".td-velocidad-input");
+      if (inp) inp.readOnly = true;
+    });
   });
 }
 window.setTableEditing = setTableEditing;
@@ -709,6 +985,7 @@ function saveEncabezado() {
   };
   localStorage.setItem(ENC_KEY, JSON.stringify(data));
 }
+
 function restoreEncabezado() {
   const saved = JSON.parse(localStorage.getItem(ENC_KEY) || "{}");
   if (saved.turno) document.getElementById("turno").value = saved.turno;
@@ -716,6 +993,7 @@ function restoreEncabezado() {
   if (saved.fecha) document.getElementById("fecha").value = saved.fecha;
   if (saved.dia) document.getElementById("dia").value = saved.dia;
 }
+
 function clearEncabezado() {
   localStorage.removeItem(ENC_KEY);
   if (document.getElementById("turno")) document.getElementById("turno").value = "";
@@ -724,7 +1002,9 @@ function clearEncabezado() {
   if (document.getElementById("dia")) document.getElementById("dia").value = "";
 }
 
-["turno","tn","fecha","dia"].forEach(id => document.getElementById(id)?.addEventListener("change", saveEncabezado));
+["turno","tn","fecha","dia"].forEach(id => {
+  document.getElementById(id)?.addEventListener("change", saveEncabezado);
+});
 document.addEventListener("DOMContentLoaded", restoreEncabezado);
 
 document.getElementById("cgClear")?.addEventListener("click", clearEncabezado);
@@ -758,7 +1038,7 @@ btnInforme?.addEventListener("click", async () => {
     const imgData = canvas.toDataURL("image/png");
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgH  = (canvas.height * pageW) / canvas.width;
+    const imgH = (canvas.height * pageW) / canvas.width;
 
     if (imgH <= pageH) {
       pdf.addImage(imgData, "PNG", 0, 0, pageW, imgH);
@@ -800,10 +1080,13 @@ btnInforme?.addEventListener("click", async () => {
       "#btnEditarFormatos",
       "#btnGrabarFormatos",
     ];
-    selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => {
-      if (el.id === "modeBtn" || el.closest("#modeBtn")) return;
-      el.style.display = show ? "" : "none";
-    }));
+
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if (el.id === "modeBtn" || el.closest("#modeBtn")) return;
+        el.style.display = show ? "" : "none";
+      });
+    });
 
     ["turno", "tn", "fecha"].forEach(id => {
       const el = document.getElementById(id);
@@ -813,12 +1096,14 @@ btnInforme?.addEventListener("click", async () => {
 
   function applyMode(mode) {
     const lectura = mode === "lectura";
+    document.body.classList.toggle("modo-lectura", lectura);
     modeBtn.classList.toggle("is-lectura", lectura);
     showEditUI(!lectura);
     updateBarDeleteVisibility(!lectura);
     if (lectura) setTableEditing(false);
     localStorage.setItem(MODE_KEY, mode);
     renderNovedades();
+    restoreTabla();
   }
 
   modeBtn.onclick = () => {
@@ -829,7 +1114,7 @@ btnInforme?.addEventListener("click", async () => {
   applyMode(localStorage.getItem(MODE_KEY) || "carga");
 })();
 
-/* Labels móviles en celdas (como ya tenías) */
+/* Labels móviles */
 document.addEventListener("DOMContentLoaded", () => {
   const labels = [
     "Sabor 1", "Formato 1", "Velocidad nominal 1",
