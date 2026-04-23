@@ -1054,11 +1054,6 @@ const CAMPOS_POR_LINEA = {
     { key: "c2",    label: "CONTADOR 2", type: "number" },
     { key: "c3",    label: "CONTADOR 3", type: "number" }
   ],
-  "4": [
-    { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
-    { key: "packs",       label: "PACKS",                type: "number" },
-    { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
-  ],
   "5": [
     { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
     { key: "packs",       label: "PACKS",                type: "number" },
