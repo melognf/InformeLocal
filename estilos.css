@@ -1082,3 +1082,115 @@ input[type="date"]:focus {
   overflow: visible !important;
   min-height: 40px;
 }
+
+/* ===== PRODUCCIÓN DEL TURNO ===== */
+.prod-turno {
+  margin-top: 24px;
+  margin-bottom: 32px;
+  border: 2px solid #000;
+  background: #fff;
+}
+
+.prod-turno h2 {
+  background: #000;
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-align: center;
+  border-bottom: 3px solid #e10600;
+}
+
+.prod-card {
+  border-top: 1px solid #ddd;
+  padding: 14px 14px 12px;
+  background: #fff;
+}
+
+.prod-card h3 {
+  background: #000;
+  color: #fff;
+  margin: -14px -14px 14px -14px;
+  padding: 7px 14px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-left: 5px solid #e10600;
+}
+
+.prod-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.prod-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #000;
+  flex: 1 1 130px;
+}
+
+.prod-fields input {
+  padding: 9px 10px;
+  border: 1px solid #f5c0bc;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  width: 100%;
+  background: #fff5f5;
+  color: #000;
+  transition: background .15s, box-shadow .15s, border-color .15s;
+}
+
+.prod-fields input::placeholder {
+  color: #ccc;
+}
+
+.prod-fields input:focus {
+  outline: none;
+  background: #fff0f0;
+  border-color: #e10600;
+  box-shadow: 0 0 0 3px rgba(225,6,0,.15);
+}
+
+.prod-run-label {
+  margin: 14px -14px 12px -14px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  background: #222;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 5px 14px;
+  border-left: 5px solid #e10600;
+}
+
+.prod-btn-run2 {
+  margin-top: 14px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.prod-btn-run2:hover {
+  background: #222;
+}
+
+@media (max-width: 768px) {
+  .prod-fields { gap: 8px; }
+  .prod-fields label { flex: 1 1 calc(50% - 8px); }
+  .prod-fields input { font-size: 15px; }
+}

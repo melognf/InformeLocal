@@ -204,6 +204,8 @@ function cgInit() {
   buildNvHoraOptions();
   renderNovedades();
 
+  renderProdTurno();
+
   const rangoSel = document.getElementById('cgRango');
   rangoSel?.addEventListener('change', () => {
     saveCgState();
@@ -605,6 +607,7 @@ function clearNovedades() {
   localStorage.removeItem(FORM_KEY);
   document.querySelectorAll(".linea-card ul").forEach(u => u.innerHTML = "");
   renderNovedades();
+  renderProdTurno();
 }
 
 function addNovedad(linea, hora, texto) {
@@ -613,6 +616,7 @@ function addNovedad(linea, hora, texto) {
   sortNovedadesArray(saved);
   localStorage.setItem(FORM_KEY, JSON.stringify(saved));
   renderNovedades();
+  renderProdTurno();
 }
 
 function deleteNovedad(linea, hora, texto) {
@@ -623,6 +627,7 @@ function deleteNovedad(linea, hora, texto) {
     localStorage.setItem(FORM_KEY, JSON.stringify(list));
   }
   renderNovedades();
+  renderProdTurno();
 }
 
 formNovedad?.addEventListener("submit", e => {
@@ -981,7 +986,8 @@ function saveEncabezado() {
     turno: document.getElementById("turno")?.value || "",
     tn: document.getElementById("tn")?.value || "",
     fecha: document.getElementById("fecha")?.value || "",
-    dia: document.getElementById("dia")?.value || ""
+    dia: document.getElementById("dia")?.value || "",
+    lideres: document.getElementById("lideres")?.value || ""
   };
   localStorage.setItem(ENC_KEY, JSON.stringify(data));
 }
@@ -992,23 +998,208 @@ function restoreEncabezado() {
   if (saved.tn) document.getElementById("tn").value = saved.tn;
   if (saved.fecha) document.getElementById("fecha").value = saved.fecha;
   if (saved.dia) document.getElementById("dia").value = saved.dia;
+  if (saved.lideres) document.getElementById("lideres").value = saved.lideres;
 }
 
 function clearEncabezado() {
   localStorage.removeItem(ENC_KEY);
-  if (document.getElementById("turno")) document.getElementById("turno").value = "";
-  if (document.getElementById("tn")) document.getElementById("tn").value = "";
-  if (document.getElementById("fecha")) document.getElementById("fecha").value = "";
-  if (document.getElementById("dia")) document.getElementById("dia").value = "";
+  ["turno","tn","fecha","dia","lideres"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
 }
 
-["turno","tn","fecha","dia"].forEach(id => {
+["turno","tn","fecha","dia","lideres"].forEach(id => {
   document.getElementById(id)?.addEventListener("change", saveEncabezado);
 });
+document.getElementById("lideres")?.addEventListener("input", saveEncabezado);
+
+document.getElementById("tn")?.addEventListener("change", () => {
+  const tn = document.getElementById("tn")?.value;
+  const rangoSel = document.getElementById("cgRango");
+  if (!rangoSel) return;
+  const nuevoRango = tn === "TN" ? "18-06" : "06-18";
+  if (rangoSel.value !== nuevoRango) {
+    rangoSel.value = nuevoRango;
+    rangoSel.dispatchEvent(new Event("change"));
+  }
+});
+
 document.addEventListener("DOMContentLoaded", restoreEncabezado);
 
 document.getElementById("cgClear")?.addEventListener("click", clearEncabezado);
 document.getElementById("nvClear")?.addEventListener("click", clearEncabezado);
+
+/* =========================
+   PRODUCCIÓN DEL TURNO (localStorage)
+   ========================= */
+const PROD_TURNO_KEY = "produccion_turno_v1";
+
+const CAMPOS_POR_LINEA = {
+  "1": [
+    { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
+    { key: "packs",       label: "PACKS",                type: "number" },
+    { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
+  ],
+  "2": [
+    { key: "latas",   label: "CANTIDAD DE LATAS", type: "number" },
+    { key: "depa",    label: "ROTURA DE DEPA",    type: "number" },
+    { key: "seamer",  label: "SEAMER",            type: "number" },
+    { key: "rechazo", label: "RECHAZO",           type: "number" }
+  ],
+  "3": [
+    { key: "orden", label: "ORDEN",      type: "text" },
+    { key: "sabor", label: "SABOR",      type: "text" },
+    { key: "c1",    label: "CONTADOR 1", type: "number" },
+    { key: "c2",    label: "CONTADOR 2", type: "number" },
+    { key: "c3",    label: "CONTADOR 3", type: "number" }
+  ],
+  "4": [
+    { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
+    { key: "packs",       label: "PACKS",                type: "number" },
+    { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
+  ],
+  "5": [
+    { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
+    { key: "packs",       label: "PACKS",                type: "number" },
+    { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
+  ],
+  "6": [
+    { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
+    { key: "packs",       label: "PACKS",                type: "number" },
+    { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
+  ],
+  "7": [
+    { key: "orden", label: "ORDEN",      type: "text" },
+    { key: "sabor", label: "SABOR",      type: "text" },
+    { key: "c1",    label: "CONTADOR 1", type: "number" },
+    { key: "c2",    label: "CONTADOR 2", type: "number" },
+    { key: "c3",    label: "CONTADOR 3", type: "number" }
+  ]
+};
+
+function getProdTurnoData() {
+  return JSON.parse(localStorage.getItem(PROD_TURNO_KEY) || "{}");
+}
+
+function saveProdTurnoField(linea, run, key, value) {
+  const data = getProdTurnoData();
+  if (!data[linea]) data[linea] = {};
+  if (!data[linea][run]) data[linea][run] = {};
+  data[linea][run][key] = value;
+  localStorage.setItem(PROD_TURNO_KEY, JSON.stringify(data));
+}
+
+function setProdTurnoRun2(linea, show) {
+  const data = getProdTurnoData();
+  if (!data[linea]) data[linea] = {};
+  data[linea].showRun2 = show;
+  if (!show) delete data[linea].run2;
+  localStorage.setItem(PROD_TURNO_KEY, JSON.stringify(data));
+}
+
+function getLineasConNovedades() {
+  const novedades = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+  const lineas = new Set();
+  novedades.forEach(({ linea }) => {
+    const match = linea?.match(/^LÍNEA\s+(\d+)$/);
+    if (match) lineas.add(match[1]);
+  });
+  return Array.from(lineas).sort((a, b) => Number(a) - Number(b));
+}
+
+function buildRunFields(linea, run, savedData, disabled) {
+  const campos = CAMPOS_POR_LINEA[linea] || [];
+  const runData = savedData?.[linea]?.[run] || {};
+
+  const div = document.createElement("div");
+  div.className = "prod-fields";
+
+  campos.forEach(({ key, label, type }) => {
+    const lbl = document.createElement("label");
+    lbl.textContent = label;
+
+    const inp = document.createElement("input");
+    inp.type = type;
+    inp.placeholder = type === "number" ? "0" : "—";
+    inp.value = runData[key] || "";
+    inp.disabled = disabled;
+    if (type === "number") inp.min = "0";
+
+    inp.addEventListener("input", () => saveProdTurnoField(linea, run, key, inp.value));
+
+    lbl.appendChild(inp);
+    div.appendChild(lbl);
+  });
+
+  return div;
+}
+
+function renderProdTurno() {
+  const seccion = document.getElementById("produccionTurno");
+  if (!seccion) return;
+
+  const lineasActivas = getLineasConNovedades();
+  const savedData = getProdTurnoData();
+
+  const h2 = seccion.querySelector("h2");
+  seccion.innerHTML = "";
+  if (h2) seccion.appendChild(h2);
+
+  if (lineasActivas.length === 0) {
+    seccion.style.display = "none";
+    return;
+  }
+
+  seccion.style.display = "";
+
+  lineasActivas.forEach(linea => {
+    const lineaData = savedData[linea] || {};
+    const showRun2 = !!lineaData.showRun2;
+
+    const card = document.createElement("div");
+    card.className = "prod-card";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = `LÍNEA ${linea}`;
+    card.appendChild(h3);
+
+    if (showRun2) {
+      const lbl1 = document.createElement("p");
+      lbl1.className = "prod-run-label";
+      lbl1.textContent = "1RA CORRIDA";
+      card.appendChild(lbl1);
+    }
+
+    card.appendChild(buildRunFields(linea, "run1", savedData, false));
+
+    if (showRun2) {
+      const lbl2 = document.createElement("p");
+      lbl2.className = "prod-run-label";
+      lbl2.textContent = "2DA CORRIDA";
+      card.appendChild(lbl2);
+      card.appendChild(buildRunFields(linea, "run2", savedData, false));
+    }
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prod-btn-run2";
+    btn.textContent = showRun2 ? "− Quitar 2da corrida" : "+ 2da corrida";
+    btn.addEventListener("click", () => {
+      if (showRun2 && !confirm("¿Quitar la 2da corrida y sus datos?")) return;
+      setProdTurnoRun2(linea, !showRun2);
+      renderProdTurno();
+    });
+    card.appendChild(btn);
+
+    seccion.appendChild(card);
+  });
+}
+
+function clearProdTurno() {
+  localStorage.removeItem(PROD_TURNO_KEY);
+  renderProdTurno();
+}
 
 /* =========================
    PDF
@@ -1088,7 +1279,7 @@ btnInforme?.addEventListener("click", async () => {
       });
     });
 
-    ["turno", "tn", "fecha"].forEach(id => {
+    ["turno", "tn", "fecha", "lideres"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.disabled = !show;
     });
@@ -1104,6 +1295,7 @@ btnInforme?.addEventListener("click", async () => {
     localStorage.setItem(MODE_KEY, mode);
     renderNovedades();
     restoreTabla();
+    renderProdTurno();
   }
 
   modeBtn.onclick = () => {

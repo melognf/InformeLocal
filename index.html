@@ -34,11 +34,11 @@
                 <select id="tn" class="encabezado-input">
                   <option value=""></option>
                   <option>TM</option>
-                  <option>TT</option>
                   <option>TN</option>
                 </select>
                 <input type="date" id="fecha" class="encabezado-input" />
                 <input type="text" id="dia" class="encabezado-input" readonly placeholder="Día" />
+                <input type="text" id="lideres" class="encabezado-input" placeholder="Líderes" />
               </div>
               <div class="logo-encabezado">
               <button id="modeBtn" class="mode-btn-header" type="button">
@@ -184,11 +184,15 @@
         </div>
       </form>
     </section>
+
+    <!-- ===== PRODUCCIÓN DEL TURNO ===== -->
+    <section id="produccionTurno" class="prod-turno" style="display:none;">
+      <h2>PRODUCCIÓN DEL TURNO</h2>
+    </section>
   </main>
 
   
-  <script type="module" src="firebase-config.js"></script>
-<script type="module" src="app.js"></script>
+  <script type="module" src="app.js"></script>
 
 </body>
 </html>
