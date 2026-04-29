@@ -668,7 +668,11 @@ formNovedad?.addEventListener("submit", e => {
   renderNovedades();
 });
 
-nvClear?.addEventListener("click", () => clearNovedades());
+nvClear?.addEventListener("click", () => {
+  clearNovedades();
+  clearCierres();
+  clearProdTurno();
+});
 cgClearBtn?.addEventListener("click", () => cgClear());
 
 /* =========================
@@ -837,8 +841,22 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tabla-produccion tbody tr").forEach(tr => {
     const tds = tr.querySelectorAll("td");
 
-    [tds[0], tds[3]].forEach(td => {
-      if (td) td.addEventListener("input", saveTabla);
+    const pares = [
+      { sabor: tds[0], formato: tds[1], vel: tds[2] },
+      { sabor: tds[3], formato: tds[4], vel: tds[5] }
+    ];
+
+    pares.forEach(({ sabor, formato, vel }) => {
+      if (!sabor) return;
+      sabor.addEventListener("input", () => {
+        if (sabor.textContent.trim() === "") {
+          const sel = formato?.querySelector("select");
+          if (sel) { sel.value = ""; sel.dispatchEvent(new Event("change")); }
+          const inp = vel?.querySelector("input");
+          if (inp) inp.value = "";
+        }
+        saveTabla();
+      });
     });
 
     [tds[1], tds[4]].forEach(td => {
@@ -1093,6 +1111,13 @@ function setProdTurnoRun2(linea, show) {
   localStorage.setItem(PROD_TURNO_KEY, JSON.stringify(data));
 }
 
+function setProdTurnoDisabled(linea, disabled) {
+  const data = getProdTurnoData();
+  if (!data[linea]) data[linea] = {};
+  data[linea].hidden = disabled;
+  localStorage.setItem(PROD_TURNO_KEY, JSON.stringify(data));
+}
+
 function getLineasConNovedades() {
   const novedades = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
   const lineas = new Set();
@@ -1152,11 +1177,26 @@ function renderProdTurno() {
     const lineaData = savedData[linea] || {};
     const showRun2 = !!lineaData.showRun2;
 
+    // Saltar líneas ocultas manualmente
+    if (lineaData.hidden) return;
+
     const card = document.createElement("div");
     card.className = "prod-card";
 
     const h3 = document.createElement("h3");
-    h3.textContent = `LÍNEA ${linea}`;
+
+    const btnClose = document.createElement("button");
+    btnClose.type = "button";
+    btnClose.className = "prod-card-close";
+    btnClose.textContent = "×";
+    btnClose.title = "Ocultar este cuadro";
+    btnClose.addEventListener("click", () => {
+      setProdTurnoDisabled(linea, true);
+      renderProdTurno();
+    });
+
+    h3.appendChild(document.createTextNode(`LÍNEA ${linea}`));
+    h3.appendChild(btnClose);
     card.appendChild(h3);
 
     if (showRun2) {
@@ -1299,6 +1339,239 @@ btnInforme?.addEventListener("click", async () => {
   };
 
   applyMode(localStorage.getItem(MODE_KEY) || "carga");
+})();
+
+/* =========================
+   CIERRES (localStorage)
+   ========================= */
+const CIERRES_KEY = "cierres_v1";
+
+function getCierresData() {
+  return JSON.parse(localStorage.getItem(CIERRES_KEY) || "{}");
+}
+
+function saveCierreField(linea, key, value) {
+  const data = getCierresData();
+  if (!data[linea]) data[linea] = {};
+  data[linea][key] = value;
+  localStorage.setItem(CIERRES_KEY, JSON.stringify(data));
+}
+
+function toggleCierre(linea) {
+  const data = getCierresData();
+  if (!data[linea]) data[linea] = {};
+  data[linea].open = !data[linea].open;
+  localStorage.setItem(CIERRES_KEY, JSON.stringify(data));
+  renderCierres();
+}
+
+function inp(type, key, linea, value, placeholder, readOnly) {
+  const el = document.createElement("input");
+  el.type = type;
+  el.placeholder = placeholder || (type === "number" ? "0" : "—");
+  el.value = value || "";
+  if (type === "number") el.min = "0";
+  if (readOnly) { el.readOnly = true; el.className = "cierre-input cierre-calculated"; }
+  else el.className = "cierre-input";
+  if (!readOnly) el.addEventListener("input", () => saveCierreField(linea, key, el.value));
+  return el;
+}
+
+function field(labelTxt, inputEl) {
+  const wrap = document.createElement("div");
+  wrap.className = "cierre-field";
+  const lbl = document.createElement("label");
+  lbl.textContent = labelTxt;
+  lbl.appendChild(inputEl);
+  wrap.appendChild(lbl);
+  return wrap;
+}
+
+function buildCierreL1(data) {
+  const frag = document.createDocumentFragment();
+
+  const row = document.createElement("div");
+  row.className = "cierre-row";
+  row.appendChild(field("NÚMERO DE ORDEN", inp("text", "orden", "1", data.orden)));
+  row.appendChild(field("CANTIDAD DE CAJAS", inp("number", "cajas", "1", data.cajas)));
+  frag.appendChild(row);
+
+  // Toggle SI/NO Expedición
+  const expWrap = document.createElement("div");
+  expWrap.className = "cierre-field cierre-expedicion";
+  const expLbl = document.createElement("span");
+  expLbl.className = "cierre-exp-label";
+  expLbl.textContent = "CONTROLADO POR EXPEDICIÓN";
+  const btnGroup = document.createElement("div");
+  btnGroup.className = "cierre-toggle-group";
+  ["SI", "NO"].forEach(val => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = val;
+    b.className = "cierre-toggle-opt" + (data.expedicion === val ? " active" : "");
+    b.addEventListener("click", () => {
+      saveCierreField("1", "expedicion", val);
+      btnGroup.querySelectorAll(".cierre-toggle-opt").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+    });
+    btnGroup.appendChild(b);
+  });
+  expWrap.appendChild(expLbl);
+  expWrap.appendChild(btnGroup);
+  frag.appendChild(expWrap);
+
+  const row2 = document.createElement("div");
+  row2.className = "cierre-row";
+  row2.appendChild(field("MERMA", inp("number", "merma", "1", data.merma)));
+  frag.appendChild(row2);
+
+  return frag;
+}
+
+function buildCierreL2(data) {
+  const frag = document.createDocumentFragment();
+
+  const row = document.createElement("div");
+  row.className = "cierre-row";
+  row.appendChild(field("NÚMERO DE ORDEN", inp("text", "orden", "2", data.orden)));
+  row.appendChild(field("CANTIDAD DE CAJAS", inp("number", "cajas", "2", data.cajas)));
+  frag.appendChild(row);
+
+  const mermaGroup = document.createElement("div");
+  mermaGroup.className = "cierre-merma-group";
+  const mermaTitle = document.createElement("p");
+  mermaTitle.className = "cierre-group-title";
+  mermaTitle.textContent = "DETALLE DE MERMA";
+  mermaGroup.appendChild(mermaTitle);
+
+  const mermaKeys = [
+    { key: "rot_depa",   label: "ROTURA DE DEPA" },
+    { key: "rot_seamer", label: "ROTURA LLEN/SEAMER" },
+    { key: "rechazo",    label: "RECHAZO" },
+    { key: "rot_linea",  label: "ROTURA DE LÍNEA" }
+  ];
+
+  const totalInp = inp("number", "total_merma", "2", "", "0", true);
+  totalInp.id = "cierre2Total";
+
+  function recalcTotal() {
+    const vals = mermaKeys.map(({ key }) => {
+      const el = mermaGroup.querySelector(`[data-key="${key}"]`);
+      return parseFloat(el?.value || 0) || 0;
+    });
+    totalInp.value = vals.reduce((a, b) => a + b, 0);
+    saveCierreField("2", "total_merma", totalInp.value);
+  }
+
+  mermaKeys.forEach(({ key, label }) => {
+    const i = inp("number", key, "2", data[key]);
+    i.dataset.key = key;
+    const oldHandler = i.oninput;
+    i.addEventListener("input", () => { saveCierreField("2", key, i.value); recalcTotal(); });
+    mermaGroup.appendChild(field(label, i));
+  });
+
+  mermaGroup.appendChild(field("TOTAL DE MERMA", totalInp));
+  frag.appendChild(mermaGroup);
+
+  // Recalc on load
+  setTimeout(recalcTotal, 0);
+
+  return frag;
+}
+
+function buildCierreSimple(linea, data) {
+  const frag = document.createDocumentFragment();
+  const row = document.createElement("div");
+  row.className = "cierre-row";
+  row.appendChild(field("NÚMERO DE ORDEN", inp("text", "orden", linea, data.orden)));
+  row.appendChild(field("CANTIDAD DE CAJAS", inp("number", "cajas", linea, data.cajas)));
+  row.appendChild(field("MERMA", inp("number", "merma", linea, data.merma)));
+  frag.appendChild(row);
+  return frag;
+}
+
+function renderCierres() {
+  const container = document.getElementById("cierresCards");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const data = getCierresData();
+  const lineas = ["1", "2", "3", "7"];
+
+  // Actualizar estado activo de botones
+  document.querySelectorAll(".cierre-btn").forEach(btn => {
+    const l = btn.dataset.linea;
+    btn.classList.toggle("active", !!(data[l]?.open));
+  });
+
+  lineas.forEach(linea => {
+    if (!data[linea]?.open) return;
+
+    const card = document.createElement("div");
+    card.className = "cierre-card";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = `LÍNEA ${linea}`;
+    card.appendChild(h3);
+
+    const lineaData = data[linea] || {};
+    if (linea === "1") card.appendChild(buildCierreL1(lineaData));
+    else if (linea === "2") card.appendChild(buildCierreL2(lineaData));
+    else card.appendChild(buildCierreSimple(linea, lineaData));
+
+    container.appendChild(card);
+  });
+}
+
+function clearCierres() {
+  localStorage.removeItem(CIERRES_KEY);
+  renderCierres();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".cierre-btn").forEach(btn => {
+    btn.addEventListener("click", () => toggleCierre(btn.dataset.linea));
+  });
+  renderCierres();
+});
+
+/* =========================
+   BOTÓN FLOTANTE
+   ========================= */
+(function () {
+  const btn = document.getElementById("btnFlotante");
+  const texto = document.getElementById("btnFlotanteTexto");
+  const formNovedad = document.querySelector(".form-novedad");
+  if (!btn || !formNovedad) return;
+
+  function esCercaDelForm() {
+    const rect = formNovedad.getBoundingClientRect();
+    return rect.top <= window.innerHeight * 0.75;
+  }
+
+  const icono = document.getElementById("btnFlotanteIcono");
+
+  function actualizarBoton() {
+    if (esCercaDelForm()) {
+      if (icono) icono.textContent = "⬆";
+      btn.classList.add("is-arriba");
+    } else {
+      if (icono) icono.textContent = "＋";
+      btn.classList.remove("is-arriba");
+    }
+  }
+
+  btn.addEventListener("click", () => {
+    if (esCercaDelForm()) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      formNovedad.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+
+  window.addEventListener("scroll", actualizarBoton, { passive: true });
+  actualizarBoton();
 })();
 
 /* Labels móviles */

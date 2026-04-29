@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Informe de Producción</title>
-  <link rel="stylesheet" href="estilos.css" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="stylesheet" href="estilos.css?v=20260429-001" />
   <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -183,12 +186,48 @@
 
     <!-- ===== PRODUCCIÓN DEL TURNO ===== -->
     <section id="produccionTurno" class="prod-turno" style="display:none;">
-      <h2>PRODUCCIÓN DEL TURNO</h2>
+      <h2>CONTADORES</h2>
+    </section>
+
+    <!-- ===== CIERRES ===== -->
+    <section id="cierres" class="cierres-seccion">
+      <h2>CIERRES</h2>
+      <div class="cierres-btns">
+        <button type="button" class="cierre-btn" data-linea="1">LÍNEA 1</button>
+        <button type="button" class="cierre-btn" data-linea="2">LÍNEA 2</button>
+        <button type="button" class="cierre-btn" data-linea="3">LÍNEA 3</button>
+        <button type="button" class="cierre-btn" data-linea="7">LÍNEA 7</button>
+      </div>
+      <div id="cierresCards"></div>
     </section>
   </main>
 
   
-  <script type="module" src="app.js"></script>
+  <!-- Botón flotante -->
+  <button id="btnFlotante" type="button" aria-label="Navegar">
+    <span id="btnFlotanteIcono">＋</span>
+    <span id="btnFlotanteTexto">AGREGAR NOVEDAD</span>
+  </button>
+
+  <script type="module" src="app.js?v=20260429-001"></script>
+
+  <!-- Auto-update: recarga si hay nueva versión -->
+  <script>
+    (function () {
+      const VERSION_ACTUAL = "20260429-001";
+      function checkVersion() {
+        fetch("version.json?t=" + Date.now())
+          .then(r => r.json())
+          .then(data => {
+            if (data.v && data.v !== VERSION_ACTUAL) {
+              location.reload(true);
+            }
+          })
+          .catch(() => {});
+      }
+      setInterval(checkVersion, 2 * 60 * 1000); // cada 2 minutos
+    })();
+  </script>
 
 </body>
 </html>
