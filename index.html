@@ -129,7 +129,14 @@
             <option value="7">LÍNEA 7</option>
           </select>
         </label>
-        <label>Sabor: <input type="text" id="cgSabor" placeholder="Ej: POW HF SOUR 500×6"></label>
+        <label>Tipo:
+          <select id="cgColor">
+            <option value="rojo">🔴 Producción</option>
+            <option value="celeste">🔵 CIP</option>
+            <option value="marron">🟫 Mantenimiento</option>
+          </select>
+        </label>
+        <label>Descripción: <input type="text" id="cgSabor" placeholder="Ej: POW HF SOUR 500×6"></label>
         <label>Inicio: <input type="time" id="cgInicio"></label>
         <label>Fin: <input type="time" id="cgFin"></label>
         <button type="submit">Agregar</button>
@@ -172,9 +179,54 @@
         </label>
         <label>Hora:<select id="nvHora" required></select></label>
 
+        <label>Tipo:
+          <select id="nvTipo">
+            <option value="">— Sin clasificar —</option>
+            <option value="mecanica">🔧 PARO DE EQUIPO — MECÁNICA</option>
+            <option value="electrica">⚡ PARO DE EQUIPO — ELÉCTRICA</option>
+            <option value="operativa">👷 PARADA OPERATIVA</option>
+            <option value="calidad">⚠️ DESVÍO DE CALIDAD</option>
+            <option value="materias">📦 CALIDAD DEFICIENTE DE MAT. PRIMAS</option>
+            <option value="soplado">💨 SOPLADO</option>
+            <option value="ajenos">🔀 AJENOS</option>
+          </select>
+        </label>
+
+        <label style="flex: 0 0 auto;">Minutos:
+          <input type="number" id="nvMinutos" min="0" max="720" placeholder="0" style="width:80px;" />
+        </label>
+
         <label class="full">Descripción:
           <textarea id="nvTexto" rows="2" placeholder="Detalle de la novedad..." required></textarea>
         </label>
+
+        <div class="accion-requerida-wrap" id="accionRequeridaWrap">
+          <div class="accion-req-top">
+            <label class="accion-check-label">
+              <input type="checkbox" id="nvRequiereAccion" />
+              🚩 Requiere acción
+            </label>
+            <div class="accion-responsable-wrap" id="accionResponsableWrap" style="display:none;">
+              <span>Responsable:</span>
+              <select id="nvResponsable">
+                <option value="">— Seleccionar —</option>
+                <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                <option value="PRODUCCIÓN">PRODUCCIÓN</option>
+                <option value="OTROS">OTROS</option>
+              </select>
+            </div>
+          </div>
+          <div id="accionDescWrap" style="display:none;">
+            <label class="accion-desc-label">Acción a tomar:
+              <textarea id="nvAccionTexto" rows="2" placeholder="Describí qué acción se debe realizar..."></textarea>
+            </label>
+            <div class="accion-om-inline">
+              <label>OM N°:</label>
+              <input type="text" id="nvOM" placeholder="Número de OM (opcional)" />
+            </div>
+          </div>
+        </div>
+
         <div class="acciones">
           <button type="submit">Agregar</button>
           <button type="button" id="nvClear">Borrar todo</button>
@@ -182,6 +234,12 @@
 
         </div>
       </form>
+    </section>
+
+    <!-- ===== ACCIONES PENDIENTES ===== -->
+    <section id="accionesPendientes" class="acciones-seccion" style="display:none;">
+      <h2>🚩 ACCIONES PENDIENTES</h2>
+      <div id="accionesLista"></div>
     </section>
 
     <!-- ===== PRODUCCIÓN DEL TURNO ===== -->
@@ -210,6 +268,15 @@
   </button>
 
   <script type="module" src="app.js?v=20260429-001"></script>
+
+  <!-- Limpia Service Workers obsoletos -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+    }
+  </script>
 
   <!-- Auto-update: recarga si hay nueva versión -->
   <script>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>Novedades de la App — Release Notes</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 18mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #222; background: #fff; }
+
+  .cover {
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    min-height: 100vh; text-align: center; gap: 18px;
+    border-bottom: 4px solid #e10600;
+    page-break-after: always;
+  }
+  .cover-logo { width: 110px; }
+  .cover h1 { font-size: 28px; font-weight: 900; letter-spacing: 1px; }
+  .cover h2 { font-size: 16px; font-weight: 400; color: #555; }
+  .cover .badge {
+    background: #e10600; color: #fff;
+    padding: 6px 18px; border-radius: 20px;
+    font-size: 13px; font-weight: 700;
+  }
+
+  .seccion { page-break-inside: avoid; margin-bottom: 36px; }
+  .seccion h2 {
+    background: #111; color: #fff;
+    padding: 8px 14px; font-size: 15px; letter-spacing: .5px;
+    border-left: 5px solid #e10600; margin-bottom: 14px;
+  }
+  .seccion p { line-height: 1.6; color: #444; margin-bottom: 10px; }
+
+  /* ---- Mockup general ---- */
+  .mockup { border: 1.5px solid #ddd; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .mockup-header {
+    background: #111; color: #fff;
+    padding: 7px 12px; font-weight: 700; font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* ---- Novedades tipos ---- */
+  .nv-item {
+    display: grid;
+    grid-template-columns: 58px 26px 1fr 52px;
+    gap: 6px; padding: 7px 12px; align-items: center;
+    font-size: 12px; border-bottom: 1px solid #eee;
+  }
+  .nv-item:last-child { border-bottom: none; }
+  .nv-hora { font-weight: 700; font-size: 11px; }
+  .nv-icon { font-size: 15px; text-align: center; }
+  .nv-min  { font-size: 11px; font-weight: 700; color: #555; text-align: right; }
+  .t-red    { background: #ffd6d6; border-left: 3px solid #f5a0a0; }
+  .t-orange { background: #ffddc0; border-left: 3px solid #f5b880; }
+  .t-yellow { background: #fff3a0; border-left: 3px solid #e0cc50; }
+  .t-blue   { background: #ccd9ff; border-left: 3px solid #99b0f0; }
+
+  .tipo-tabla { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
+  .tipo-tabla th { background: #111; color: #fff; padding: 5px 10px; text-align: left; }
+  .tipo-tabla td { padding: 5px 10px; border-bottom: 1px solid #eee; }
+  .dot-red    { background: #ffd6d6; } .dot-orange { background: #ffddc0; }
+  .dot-yellow { background: #fff3a0; } .dot-blue   { background: #ccd9ff; }
+
+  /* ---- Semáforo ---- */
+  .sem-card { margin-bottom: 6px; }
+  .sem-card-head {
+    background: #111; color: #fff;
+    padding: 6px 12px; font-weight: 700; font-size: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-radius: 6px 6px 0 0;
+  }
+  .sem-dot {
+    display: inline-flex; align-items: center; gap: 4px;
+    border-radius: 20px; padding: 3px 9px 3px 7px;
+    font-size: 11px; font-weight: 700;
+  }
+  .s-verde   { background: #1db954; color: #fff; }
+  .s-amarillo{ background: #d4a800; color: #fff; }
+  .s-naranja { background: #f57c00; color: #fff; }
+  .s-rojo    { background: #e10600; color: #fff; }
+  .sem-body  { background: #f9f9f9; border: 1px solid #ddd; border-top: none; border-radius: 0 0 6px 6px; padding: 8px 12px; font-size: 12px; color: #555; }
+
+  /* ---- Acciones ---- */
+  .acc-seccion { border: 2px solid #e10600; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .acc-head { background: #e10600; color: #fff; padding: 8px 14px; font-size: 13px; font-weight: 700; }
+  .acc-item { padding: 10px 14px; border-bottom: 1px solid #f0d0d0; }
+  .acc-item:last-child { border-bottom: none; }
+  .acc-meta { display: flex; gap: 7px; align-items: center; margin-bottom: 5px; flex-wrap: wrap; }
+  .acc-tag  { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .acc-linea-tag { background: #111; color: #fff; }
+  .acc-hora-tag  { color: #666; font-size: 11px; }
+  .acc-resp-tag  { background: #e10600; color: #fff; }
+  .acc-texto { font-size: 12px; color: #333; line-height: 1.4; margin-bottom: 4px; }
+  .acc-om    { font-size: 11px; color: #666; }
+  .acc-om strong { color: #000; }
+
+  /* ---- Cronograma colores ---- */
+  .cg-demo { background: #d9d9d9; padding: 10px 12px; border-radius: 6px; margin-bottom: 10px; }
+  .cg-row-demo { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; font-weight: 700; }
+  .cg-row-demo:last-child { margin-bottom: 0; }
+  .cg-linea-label { width: 60px; color: #333; }
+  .cg-bar-demo {
+    height: 22px; border-radius: 4px; display: flex; align-items: center;
+    padding: 0 10px; font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .bar-rojo    { background: #e10600; }
+  .bar-celeste { background: #29b6f6; }
+  .bar-marron  { background: #a07850; }
+
+  .cg-form-demo {
+    border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .cg-form-demo label { font-weight: 700; color: #444; display: flex; flex-direction: column; gap: 3px; }
+  .cg-form-demo select, .cg-form-demo input {
+    border: 1px solid #cfcfcf; border-radius: 6px; padding: 5px 8px; font-size: 12px; background: #fff;
+  }
+
+  /* ---- Pie de página ---- */
+  .footer { text-align: center; font-size: 10px; color: #aaa; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ===== PORTADA ===== -->
+<div class="cover">
+  <div style="font-size:48px;">🏭</div>
+  <h1>INFORME DE PRODUCCIÓN</h1>
+  <h2>Resumen de mejoras implementadas</h2>
+  <div class="badge">Versión 2026-05 &nbsp;·&nbsp; MG Monte Grande</div>
+  <p style="color:#777;font-size:12px;margin-top:20px;">App local de seguimiento por turno</p>
+</div>
+
+<!-- ===== CONTENIDO ===== -->
+<div style="padding-top: 10px;">
+
+<!-- 1. CLASIFICACIÓN DE NOVEDADES -->
+<div class="seccion">
+  <h2>1 &nbsp;— &nbsp;Clasificación de novedades por tipo</h2>
+  <p>Cada novedad ahora tiene un <strong>tipo seleccionable</strong> con ícono representativo y fondo de color. Esto permite identificar de un vistazo qué clase de evento ocurrió en cada línea.</p>
+
+  <table class="tipo-tabla">
+    <thead><tr><th>Ícono</th><th>Tipo</th><th>Color</th></tr></thead>
+    <tbody>
+      <tr class="dot-red">   <td>🔧</td><td>Paro de equipo — Mecánica</td>  <td>Rojo tenue</td></tr>
+      <tr class="dot-red">   <td>⚡</td><td>Paro de equipo — Eléctrica</td> <td>Rojo tenue</td></tr>
+      <tr class="dot-orange"><td>👷</td><td>Parada operativa</td>            <td>Naranja tenue</td></tr>
+      <tr class="dot-orange"><td>⚠️</td><td>Desvío de calidad</td>           <td>Naranja tenue</td></tr>
+      <tr class="dot-yellow"><td>📦</td><td>Calidad def. de mat. primas</td> <td>Amarillo tenue</td></tr>
+      <tr class="dot-blue">  <td>💨</td><td>Soplado</td>                     <td>Azul tenue</td></tr>
+      <tr class="dot-blue">  <td>🔀</td><td>Ajenos</td>                      <td>Azul tenue</td></tr>
+    </tbody>
+  </table>
+
+  <div class="mockup">
+    <div class="mockup-header"><span>LÍNEA 5</span></div>
+    <div class="nv-item t-red">
+      <span class="nv-hora">20:00:</span>
+      <span class="nv-icon">🔧</span>
+      <span>Falla en llenadora, revisión de sello mecánico.</span>
+      <span class="nv-min">45 min</span>
+    </div>
+    <div class="nv-item t-orange">
+      <span class="nv-hora">22:00:</span>
+      <span class="nv-icon">👷</span>
+      <span>Cambio de formato programado.</span>
+      <span class="nv-min">30 min</span>
+    </div>
+    <div class="nv-item t-blue">
+      <span class="nv-hora">01:00:</span>
+      <span class="nv-icon">🔀</span>
+      <span>Demora por falta de insumos externos.</span>
+      <span class="nv-min"></span>
+    </div>
+  </div>
+
+  <p>El campo <strong>Minutos</strong> es opcional. Permite registrar la duración del evento para el cálculo de eficiencia.</p>
+</div>
+
+<!-- 2. SEMÁFORO DE LÍNEAS -->
+<div class="seccion">
+  <h2>2 &nbsp;— &nbsp;Semáforo de estado por línea</h2>
+  <p>En el encabezado de cada línea aparece un <strong>indicador de estado</strong> que combina el ícono del tipo de parada más significativa (por minutos acumulados) con el porcentaje de eficiencia del turno.</p>
+  <p><strong>Eficiencia</strong> = (720 − minutos parados) ÷ 720 × 100. El color indica el nivel de alerta. <strong>El valor es representativo</strong>, ya que las paradas menores a 10 minutos no se informan en el sistema.</p>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+    <span class="sem-dot s-verde">🔧 94%</span>
+    <span style="font-size:11px;color:#555;align-self:center;">≥ 75% → Verde</span>
+    <span class="sem-dot s-amarillo">👷 68%</span>
+    <span style="font-size:11px;color:#555;align-self:center;">50–74% → Amarillo</span>
+    <span class="sem-dot s-naranja">⚡ 55%</span>
+    <span style="font-size:11px;color:#555;align-self:center;">35–49% → Naranja</span>
+    <span class="sem-dot s-rojo">🔧 28%</span>
+    <span style="font-size:11px;color:#555;align-self:center;">< 35% → Rojo</span>
+  </div>
+
+  <div class="sem-card">
+    <div class="sem-card-head">LÍNEA 3 <span class="sem-dot s-verde">🔀 92%</span></div>
+    <div class="sem-body">Sin paradas significativas. Tipo dominante: Ajenos (15 min).</div>
+  </div>
+  <div class="sem-card">
+    <div class="sem-card-head">LÍNEA 5 <span class="sem-dot s-naranja">👷 47%</span></div>
+    <div class="sem-body">Parada operativa dominante: 380 min acumulados.</div>
+  </div>
+  <div class="sem-card">
+    <div class="sem-card-head">LÍNEA 1 <span class="sem-dot s-rojo">🔧 22%</span></div>
+    <div class="sem-body">Parada mecánica crítica: 560 min acumulados.</div>
+  </div>
+
+  <p style="margin-top:10px;font-size:11px;color:#777;">* La eficiencia es aproximada ya que no se registran paradas menores a 10 minutos.</p>
+</div>
+
+<!-- 3. ACCIONES PENDIENTES -->
+<div class="seccion">
+  <h2>3 &nbsp;— &nbsp;Sistema de acciones pendientes</h2>
+  <p>Al cargar una novedad se puede marcar <strong>🚩 Requiere acción</strong>. Esto habilita campos adicionales: responsable, descripción de la acción y número de OM. Las novedades con acción muestran el banderín 🚩 y se listan en una sección de <strong>Acciones Pendientes</strong>.</p>
+
+  <div class="acc-seccion">
+    <div class="acc-head">🚩 &nbsp;ACCIONES PENDIENTES</div>
+    <div class="acc-item">
+      <div class="acc-meta">
+        <span class="acc-tag acc-linea-tag">LÍNEA 1</span>
+        <span class="acc-hora-tag">20:00</span>
+        <span>🔧</span>
+        <span class="acc-tag acc-resp-tag">MANTENIMIENTO</span>
+      </div>
+      <div class="acc-texto">Revisar y reemplazar sello mecánico de la llenadora.</div>
+      <div class="acc-om">OM N°: <strong>OM-2024-0391</strong></div>
+    </div>
+    <div class="acc-item">
+      <div class="acc-meta">
+        <span class="acc-tag acc-linea-tag">LÍNEA 3</span>
+        <span class="acc-hora-tag">23:00</span>
+        <span>⚠️</span>
+        <span class="acc-tag acc-resp-tag">PRODUCCIÓN</span>
+      </div>
+      <div class="acc-texto">Retener lote N°4521 y coordinar con Calidad para liberación.</div>
+      <div class="acc-om">OM N°: <strong>—</strong></div>
+    </div>
+  </div>
+
+  <p>La sección es de <strong>solo lectura</strong>. El banderín en el listado de novedades permite quitar la marca si se resuelve antes de cerrar el turno.</p>
+</div>
+
+<!-- 4. COLORES EN CRONOGRAMA -->
+<div class="seccion">
+  <h2>4 &nbsp;— &nbsp;Tipos de barras en el cronograma</h2>
+  <p>Las barras del gráfico <em>Inicio y Corte de Producción</em> ahora tienen tres colores para distinguir el tipo de actividad registrada:</p>
+
+  <div class="cg-demo">
+    <div class="cg-row-demo">
+      <span class="cg-linea-label">LÍNEA 3</span>
+      <div class="cg-bar-demo bar-rojo" style="width:260px;">aquarius pomelo</div>
+    </div>
+    <div class="cg-row-demo">
+      <span class="cg-linea-label">LÍNEA 2</span>
+      <div class="cg-bar-demo bar-rojo" style="width:130px;">fanta</div>
+      <div class="cg-bar-demo bar-celeste" style="width:80px;">cip</div>
+      <div class="cg-bar-demo bar-marron" style="width:100px;">mantenimiento</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div style="width:18px;height:18px;background:#e10600;border-radius:3px;"></div>
+      <span style="font-size:12px;font-weight:700;">🔴 Producción</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div style="width:18px;height:18px;background:#29b6f6;border-radius:3px;"></div>
+      <span style="font-size:12px;font-weight:700;">🔵 CIP</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div style="width:18px;height:18px;background:#a07850;border-radius:3px;"></div>
+      <span style="font-size:12px;font-weight:700;">🟫 Mantenimiento</span>
+    </div>
+  </div>
+
+  <div class="cg-form-demo">
+    <label>Tipo:
+      <select><option>🔴 Producción</option><option>🔵 CIP</option><option>🟫 Mantenimiento</option></select>
+    </label>
+    <label>Descripción: <input type="text" value="aquarius pomelo" style="width:160px;"/></label>
+    <label>Inicio: <input type="time" value="18:00"/></label>
+    <label>Fin: <input type="time" value="06:00"/></label>
+  </div>
+  <p style="margin-top:8px;">El selector de tipo se elige en el mismo formulario de carga. Las barras guardadas anteriormente se mantienen en rojo automáticamente.</p>
+</div>
+
+<div style="border: 2.5px solid #e10600; border-radius: 8px; padding: 14px 18px; margin-top: 10px; background: #fff8f8; page-break-inside: avoid;">
+  <p style="font-size:14px; font-weight:900; color:#e10600; margin-bottom:6px;">⚠️ IMPORTANTE</p>
+  <p style="font-size:13px; line-height:1.6; color:#222;">Antes de enviar el informe, accioná el <strong>candado 🔒</strong> para pasar al modo lectura. Esto oculta todos los botones y formularios, dejando solo la información relevante para facilitar la lectura del receptor.</p>
+</div>
+
+<div class="footer">
+  Informe de Producción — MG Monte Grande &nbsp;·&nbsp; Generado Mayo 2026
+</div>
+
+</div>
+</body>
+</html>

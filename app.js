@@ -99,13 +99,13 @@ function updateBarDeleteVisibility(show) {
   });
 }
 
-function removeCorrida(linea, inicio, fin, sabor) {
+function removeCorrida(linea, inicio, fin, sabor, color) {
   const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
-  const next = saved.filter(c => !(c.linea == linea && c.inicio == inicio && c.fin == fin && c.sabor == sabor));
+  const next = saved.filter(c => !(c.linea == linea && c.inicio == inicio && c.fin == fin && c.sabor == sabor && c.color == color));
   localStorage.setItem("corridas", JSON.stringify(next));
 }
 
-function cgAddBar(linea, inicio, fin, sabor, restored = false) {
+function cgAddBar(linea, inicio, fin, sabor, color = "rojo", restored = false) {
   const lane = document.querySelector(`.cg-lane[data-linea="${linea}"]`);
   if (!lane) return;
 
@@ -141,10 +141,11 @@ function cgAddBar(linea, inicio, fin, sabor, restored = false) {
   const width = Math.max(1, ((endMin - startMin) / total) * 100);
 
   const bar = document.createElement("div");
-  bar.className = "cg-bar";
+  bar.className = `cg-bar cg-bar-${color}`;
   bar.dataset.timeRange = rangeText;
   bar.dataset.sabor = sabor;
   bar.dataset.linea = linea;
+  bar.dataset.color = color;
 
   bar.style.left = `${left}%`;
   bar.style.width = `${width}%`;
@@ -156,7 +157,7 @@ function cgAddBar(linea, inicio, fin, sabor, restored = false) {
 
   btn.addEventListener("click", () => {
     bar.remove();
-    removeCorrida(linea, inicio, fin, sabor);
+    removeCorrida(linea, inicio, fin, sabor, color);
   });
 
   bar.appendChild(btn);
@@ -165,7 +166,7 @@ function cgAddBar(linea, inicio, fin, sabor, restored = false) {
 
   if (!restored) {
     const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
-    saved.push({ linea, inicio, fin, sabor });
+    saved.push({ linea, inicio, fin, sabor, color });
     localStorage.setItem("corridas", JSON.stringify(saved));
   }
 }
@@ -185,7 +186,7 @@ function cgClear() {
 function restoreCorridas() {
   document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML = '');
   const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
-  saved.forEach(c => cgAddBar(c.linea, c.inicio, c.fin, c.sabor, true));
+  saved.forEach(c => cgAddBar(c.linea, c.inicio, c.fin, c.sabor, c.color || "rojo", true));
   updateBarDeleteVisibility(!isLectura());
 
   document.querySelectorAll(".cg-lane").forEach(lane => adjustLaneHeight(lane));
@@ -261,7 +262,8 @@ form?.addEventListener('submit', e => {
     }
   }
 
-  cgAddBar(linea, ini, fin, sabor);
+  const color = document.getElementById("cgColor")?.value || "rojo";
+  cgAddBar(linea, ini, fin, sabor, color);
   form.reset();
 });
 
@@ -269,6 +271,16 @@ form?.addEventListener('submit', e => {
    NOVEDADES (localStorage)
    ========================= */
 const FORM_KEY = "novedades_v1";
+
+const TIPOS_NOVEDAD = {
+  mecanica:  { icono: "🔧", label: "PARO DE EQUIPO — MECÁNICA",        color: "red"    },
+  electrica: { icono: "⚡", label: "PARO DE EQUIPO — ELÉCTRICA",        color: "red"    },
+  operativa: { icono: "👷", label: "PARADA OPERATIVA",                   color: "orange" },
+  calidad:   { icono: "⚠️", label: "DESVÍO DE CALIDAD",                 color: "orange" },
+  materias:  { icono: "📦", label: "CALIDAD DEFICIENTE DE MAT. PRIMAS", color: "yellow" },
+  soplado:   { icono: "💨", label: "SOPLADO",                            color: "blue"   },
+  ajenos:    { icono: "🔀", label: "AJENOS",                             color: "blue"   },
+};
 
 const formNovedad = document.getElementById("formNovedad");
 const nvLinea = document.getElementById("nvLinea");
@@ -318,6 +330,12 @@ function buildNvHoraOptions() {
 document.addEventListener("DOMContentLoaded", () => {
   buildNvHoraOptions();
   renderNovedades();
+
+  document.getElementById("nvRequiereAccion")?.addEventListener("change", function () {
+    const show = this.checked;
+    document.getElementById("accionResponsableWrap").style.display = show ? "" : "none";
+    document.getElementById("accionDescWrap").style.display = show ? "" : "none";
+  });
 });
 
 document.getElementById("cgRango")?.addEventListener("change", () => {
@@ -428,18 +446,30 @@ function enterNvEditMode() {
   NV_EDITING = true;
 
   document.querySelectorAll(".linea-card li").forEach(li => {
-    const linea = li.closest(".linea-card")?.querySelector("h3")?.textContent.trim() || "";
+    const linea = li.closest(".linea-card")?.querySelector("h3")?.firstChild?.textContent.trim() || "";
     const originalHeight = Math.max(60, Math.round(li.getBoundingClientRect().height));
 
     const horaActual = li.dataset.hora || li.querySelector("b")?.textContent.replace(/:$/, "").trim() || "06:00";
     const textoActual = li.dataset.texto || li.querySelector(".nv-text")?.textContent || "";
+    const tipoActual = li.dataset.tipo || "";
+    const minutosActual = li.dataset.minutos || "0";
 
     li.dataset.originalLinea = linea;
     li.dataset.originalHora = horaActual;
     li.dataset.originalTexto = textoActual;
+    li.dataset.originalTipo = tipoActual;
+    li.dataset.originalMinutos = minutosActual;
 
-    li.classList.add("editing");
+    li.className = "editing";
     li.innerHTML = "";
+
+    const selTipo = document.createElement("select");
+    selTipo.className = "nv-edit-tipo";
+    selTipo.innerHTML = `<option value="">— Sin clasificar —</option>` +
+      Object.entries(TIPOS_NOVEDAD).map(([val, { icono, label }]) =>
+        `<option value="${val}">${icono} ${label}</option>`
+      ).join("");
+    selTipo.value = tipoActual;
 
     const inHora = document.createElement("input");
     inHora.type = "time";
@@ -467,7 +497,17 @@ function enterNvEditMode() {
     ta.addEventListener("input", autoGrow);
     setTimeout(autoGrow, 0);
 
+    const inMin = document.createElement("input");
+    inMin.type = "number";
+    inMin.min = "0";
+    inMin.max = "720";
+    inMin.placeholder = "0";
+    inMin.value = minutosActual !== "0" ? minutosActual : "";
+    inMin.className = "nv-edit-min";
+
+    li.appendChild(selTipo);
     li.appendChild(inHora);
+    li.appendChild(inMin);
     li.appendChild(ta);
   });
 }
@@ -483,12 +523,16 @@ function saveNvEdits() {
     const ta = li.querySelector('textarea');
     if (!inHora || !ta) continue;
 
+    const selTipo = li.querySelector("select.nv-edit-tipo");
+    const inMin = li.querySelector("input.nv-edit-min");
     const oldLinea = li.dataset.originalLinea || "";
     const oldHora = li.dataset.originalHora || "";
     const oldTexto = li.dataset.originalTexto || "";
 
     const newHora = (inHora.value || "").trim();
     const newTexto = (ta.value || "").trim();
+    const newTipo = selTipo?.value || "";
+    const newMinutos = parseInt(inMin?.value || "0", 10) || 0;
 
     if (!newTexto) {
       alert("Hay una novedad sin descripción.");
@@ -502,8 +546,15 @@ function saveNvEdits() {
     }
 
     const idx = list.findIndex(nv => nv.linea === oldLinea && nv.hora === oldHora && nv.texto === oldTexto);
-    if (idx !== -1) list[idx] = { linea: oldLinea, hora: newHora, texto: newTexto };
-    else list.push({ linea: oldLinea, hora: newHora, texto: newTexto });
+    if (idx !== -1) {
+      list[idx].hora     = newHora;
+      list[idx].texto    = newTexto;
+      list[idx].tipo     = newTipo;
+      list[idx].minutos  = newMinutos;
+      // accion no se toca — solo se modifica desde el formulario o el botón banderín
+    } else {
+      list.push({ linea: oldLinea, hora: newHora, texto: newTexto, tipo: newTipo, minutos: newMinutos, accion: null });
+    }
   }
 
   sortNovedadesArray(list);
@@ -535,37 +586,44 @@ function renderNovedades() {
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
   sortNovedadesArray(saved);
 
-  saved.forEach(({ linea, hora, texto }) => {
-    const card = cards.find(c => c.querySelector("h3")?.textContent.trim() === linea);
+  saved.forEach(({ linea, hora, texto, tipo, minutos, accion }) => {
+    const card = cards.find(c => c.querySelector("h3")?.firstChild?.textContent.trim() === linea);
     if (!card) return;
 
     const ul = card.querySelector("ul");
     if (!ul) return;
 
+    const tipoInfo = TIPOS_NOVEDAD[tipo] || null;
+    const min = Number(minutos) || 0;
+
     const li = document.createElement("li");
     li.dataset.linea = linea;
     li.dataset.hora = hora;
     li.dataset.texto = texto;
+    li.dataset.tipo = tipo || "";
+    li.dataset.minutos = min;
+    if (tipoInfo) li.classList.add(`nv-tipo-${tipoInfo.color}`);
 
     const b = document.createElement("b");
     b.textContent = `${hora}:`;
 
-    const wrap = document.createElement("div");
-    wrap.style.display = "flex";
-    wrap.style.alignItems = "flex-start";
-    wrap.style.gap = "8px";
+    const spanIcono = document.createElement("span");
+    spanIcono.className = "nv-icono";
+    spanIcono.textContent = tipoInfo ? tipoInfo.icono : "";
 
     const spanTxt = document.createElement("span");
     spanTxt.className = "nv-text";
     spanTxt.textContent = texto;
-    spanTxt.style.flex = "1 1 auto";
+
+    const spanMin = document.createElement("span");
+    spanMin.className = "nv-min";
+    spanMin.textContent = min > 0 ? `${min} min` : "";
 
     const btnDel = document.createElement("button");
     btnDel.type = "button";
     btnDel.className = "nv-del";
     btnDel.textContent = "×";
     btnDel.title = "Eliminar novedad";
-    btnDel.style.flex = "0 0 auto";
     btnDel.addEventListener("click", (e) => {
       e.stopPropagation();
       if (confirm("¿Eliminar esta novedad?")) deleteNovedad(linea, hora, texto);
@@ -573,13 +631,36 @@ function renderNovedades() {
 
     if (isLectura) btnDel.style.display = "none";
 
-    wrap.appendChild(spanTxt);
-    wrap.appendChild(btnDel);
+    const tieneAccion = !!(accion && (accion.responsable || accion.texto || accion.om));
+
+    const btnFlag = document.createElement("button");
+    btnFlag.type = "button";
+    btnFlag.className = "btn-flag activo";
+    btnFlag.textContent = "🚩";
+    btnFlag.title = "Quitar acción requerida";
+    if (!tieneAccion) btnFlag.style.display = "none";
+    btnFlag.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!confirm("¿Quitar la acción requerida de esta novedad?")) return;
+      const list = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+      const nv = list.find(n => n.linea === linea && n.hora === hora && n.texto === texto);
+      if (!nv) return;
+      nv.accion = null;
+      localStorage.setItem(FORM_KEY, JSON.stringify(list));
+      renderNovedades();
+    });
 
     li.appendChild(b);
-    li.appendChild(wrap);
+    li.appendChild(spanIcono);
+    li.appendChild(spanTxt);
+    li.appendChild(spanMin);
+    li.appendChild(btnFlag);
+    li.appendChild(btnDel);
     ul.appendChild(li);
   });
+
+  renderSemaforo();
+  renderAcciones();
 
   cards.forEach(card => {
     const ul = card.querySelector("ul");
@@ -602,6 +683,145 @@ function renderNovedades() {
   }
 }
 
+/* ======== Semáforo de líneas ======== */
+const SECTORES_SEMAFORO = [
+  { id: "LÍNEA 1",      label: "LÍNEA 1",   grupo: "lineas" },
+  { id: "LÍNEA 2",      label: "LÍNEA 2",   grupo: "lineas" },
+  { id: "LÍNEA 3",      label: "LÍNEA 3",   grupo: "lineas" },
+  { id: "LÍNEA 5",      label: "LÍNEA 5",   grupo: "lineas" },
+  { id: "LÍNEA 6",      label: "LÍNEA 6",   grupo: "lineas" },
+  { id: "LÍNEA 7",      label: "LÍNEA 7",   grupo: "lineas" },
+  { id: "SOPLADO",      label: "SOPLADO",   grupo: "otros"  },
+  { id: "ELABORACIÓN",  label: "ELABOR.",   grupo: "otros"  },
+  { id: "AUXILIARES",   label: "AUXIL.",    grupo: "otros"  },
+  { id: "A & E",        label: "A & E",     grupo: "otros"  },
+  { id: "PLANEAMIENTO", label: "PLANEA.",   grupo: "otros"  },
+];
+
+const SEVERITY_ORDER = {
+  mecanica: 4, electrica: 4,
+  operativa: 3, calidad: 3,
+  materias: 2,
+  soplado: 1, ajenos: 1,
+  "": 0
+};
+
+function getSemaforoColor(totalMin, worstSeverity) {
+  if (worstSeverity === 0) return "verde";
+
+  if (totalMin > 0) {
+    const efic = ((720 - totalMin) / 720) * 100;
+    if (efic < 50) return "rojo";
+    if (efic <= 75) return "amarillo";
+    return "verde";
+  }
+
+  if (worstSeverity >= 4) return "rojo";
+  if (worstSeverity === 3) return "naranja";
+  if (worstSeverity === 2) return "amarillo";
+  return "azul";
+}
+
+function renderSemaforo() {
+  const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+
+  document.querySelectorAll(".linea-card").forEach(card => {
+    const h3 = card.querySelector("h3");
+    if (!h3) return;
+
+    const linea = h3.firstChild?.textContent.trim() || "";
+    h3.querySelector(".semaforo-dot")?.remove();
+
+    const novedades = saved.filter(n => n.linea === linea);
+    if (novedades.length === 0) return;
+
+    const totalMin = novedades.reduce((s, n) => s + (Number(n.minutos) || 0), 0);
+
+    const minByTipo = {};
+    novedades.forEach(n => {
+      const t = n.tipo || "";
+      minByTipo[t] = (minByTipo[t] || 0) + (Number(n.minutos) || 0);
+    });
+
+    const tipoConMasMin = Object.entries(minByTipo)
+      .filter(([t]) => t !== "")
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+    const worstSeverity = novedades.reduce((max, n) => Math.max(max, SEVERITY_ORDER[n.tipo] ?? 0), 0);
+    const worstTipoSev = novedades.find(n => (SEVERITY_ORDER[n.tipo] ?? 0) === worstSeverity);
+
+    const dominantTipo = totalMin > 0 ? tipoConMasMin : (worstTipoSev?.tipo || null);
+    const icono = dominantTipo ? (TIPOS_NOVEDAD[dominantTipo]?.icono || "") : "";
+    const color = getSemaforoColor(totalMin, worstSeverity);
+    const efic = totalMin > 0 ? Math.round(((720 - totalMin) / 720) * 100) : null;
+
+    const dot = document.createElement("span");
+    dot.className = `semaforo-dot s-${color}`;
+    dot.title = efic !== null ? `Eficiencia: ${efic}%` : "";
+
+    const iconSpan = document.createElement("span");
+    iconSpan.className = "semaforo-dot-icon";
+    iconSpan.textContent = icono;
+
+    if (efic !== null) {
+      const eficSpan = document.createElement("span");
+      eficSpan.className = "semaforo-dot-efic";
+      eficSpan.textContent = `${efic}%`;
+      dot.appendChild(iconSpan);
+      dot.appendChild(eficSpan);
+    } else {
+      dot.appendChild(iconSpan);
+    }
+
+    h3.appendChild(dot);
+  });
+}
+
+function renderAcciones() {
+  const seccion = document.getElementById("accionesPendientes");
+  const lista = document.getElementById("accionesLista");
+  if (!seccion || !lista) return;
+
+  const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+  const conAccion = saved.filter(n => n.accion && (n.accion.texto || n.accion.responsable));
+
+  if (conAccion.length === 0) {
+    seccion.style.display = "none";
+    return;
+  }
+
+  seccion.style.display = "";
+  lista.innerHTML = "";
+
+  conAccion.forEach(({ linea, hora, tipo, accion }) => {
+    const tipoInfo = TIPOS_NOVEDAD[tipo] || null;
+    const item = document.createElement("div");
+    item.className = "accion-item";
+
+    const meta = document.createElement("div");
+    meta.className = "accion-meta";
+    meta.innerHTML = `
+      <span class="accion-linea">${linea}</span>
+      <span class="accion-hora">${hora}</span>
+      ${tipoInfo ? `<span class="accion-tipo-icon">${tipoInfo.icono}</span>` : ""}
+      ${accion.responsable ? `<span class="accion-resp-tag">${accion.responsable}</span>` : ""}
+    `;
+
+    const texto = document.createElement("div");
+    texto.className = "accion-texto";
+    texto.textContent = accion.texto || "—";
+
+    const omDiv = document.createElement("div");
+    omDiv.className = "accion-om-lectura";
+    omDiv.innerHTML = `OM N°: <strong>${accion.om || "—"}</strong>`;
+
+    item.appendChild(meta);
+    item.appendChild(texto);
+    item.appendChild(omDiv);
+    lista.appendChild(item);
+  });
+}
+
 function clearNovedades() {
   if (!confirm("¿Borrar todas las novedades guardadas?")) return;
   localStorage.removeItem(FORM_KEY);
@@ -610,9 +830,9 @@ function clearNovedades() {
   renderProdTurno();
 }
 
-function addNovedad(linea, hora, texto) {
+function addNovedad(linea, hora, texto, tipo = "", minutos = 0, accion = null) {
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
-  saved.push({ linea, hora, texto });
+  saved.push({ linea, hora, texto, tipo, minutos: Number(minutos) || 0, accion });
   sortNovedadesArray(saved);
   localStorage.setItem(FORM_KEY, JSON.stringify(saved));
   renderNovedades();
@@ -641,6 +861,14 @@ formNovedad?.addEventListener("submit", e => {
   const linea = (nvLinea?.value || "").trim();
   const hora = (document.getElementById("nvHora")?.value || "").trim();
   const texto = (nvTexto?.value || "").trim();
+  const tipo = (document.getElementById("nvTipo")?.value || "").trim();
+  const minutos = parseInt(document.getElementById("nvMinutos")?.value || "0", 10) || 0;
+  const requiereAccion = document.getElementById("nvRequiereAccion")?.checked || false;
+  const accion = requiereAccion ? {
+    responsable: document.getElementById("nvResponsable")?.value || "",
+    texto: (document.getElementById("nvAccionTexto")?.value || "").trim(),
+    om: (document.getElementById("nvOM")?.value || "").trim()
+  } : null;
 
   const rango = document.getElementById("cgRango")?.value || "06-18";
 
@@ -662,7 +890,10 @@ formNovedad?.addEventListener("submit", e => {
     return;
   }
 
-  addNovedad(linea, hora, texto);
+  addNovedad(linea, hora, texto, tipo, minutos, accion);
+  document.getElementById("nvRequiereAccion").checked = false;
+  document.getElementById("accionResponsableWrap").style.display = "none";
+  document.getElementById("accionDescWrap").style.display = "none";
   formNovedad.reset();
   buildNvHoraOptions();
   renderNovedades();
@@ -1512,7 +1743,16 @@ function renderCierres() {
     card.className = "cierre-card";
 
     const h3 = document.createElement("h3");
-    h3.textContent = `LÍNEA ${linea}`;
+    h3.appendChild(document.createTextNode(`LÍNEA ${linea}`));
+
+    const btnCloseCierre = document.createElement("button");
+    btnCloseCierre.type = "button";
+    btnCloseCierre.className = "cierre-card-close";
+    btnCloseCierre.textContent = "×";
+    btnCloseCierre.title = "Cerrar";
+    btnCloseCierre.addEventListener("click", () => toggleCierre(linea));
+    h3.appendChild(btnCloseCierre);
+
     card.appendChild(h3);
 
     const lineaData = data[linea] || {};

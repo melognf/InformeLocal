@@ -290,6 +290,10 @@ body.modo-lectura .tabla-produccion .td-formato-select {
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
 }
 
+.cg-bar-rojo    { background: #e10600; color: #fff; }
+.cg-bar-celeste { background: #29b6f6; color: #fff; }
+.cg-bar-marron  { background: #a07850; color: #fff; }
+
 .cg-bar-close {
   position: absolute;
   left: 6px;
@@ -391,7 +395,31 @@ body.modo-lectura .tabla-produccion .td-formato-select {
   padding: 6px 10px;
   font-size: 15px;
   letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
+.semaforo-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 20px;
+  padding: 3px 8px 3px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.2);
+  white-space: nowrap;
+}
+
+.semaforo-dot-icon { font-size: 14px; line-height: 1; }
+.semaforo-dot-efic { font-size: 11px; font-weight: 800; color: #fff; }
+
+.s-verde    { background: #1db954; border-color: #17a348; }
+.s-azul     { background: #3a7bd5; border-color: #2e64b8; }
+.s-amarillo { background: #d4a800; border-color: #b08800; }
+.s-naranja  { background: #f57c00; border-color: #d46800; }
+.s-rojo     { background: #e10600; border-color: #b80000; }
 
 .linea-card ul {
   list-style: none;
@@ -889,14 +917,158 @@ input[type="date"]:focus {
   resize:vertical;
 }
 
+
 /* Ítems de novedades */
 .linea-card ul li {
   display: grid;
-  grid-template-columns: 80px 1fr auto;
+  grid-template-columns: 60px 26px 1fr 44px auto;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 7px 8px;
   align-items: flex-start;
-  border-bottom: 1px solid #e9e9e9;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+.linea-card ul li:last-child { border-bottom: 1px solid transparent; }
+
+.nv-min {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  text-align: right;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* Inputs de edición */
+.nv-edit-min {
+  width: 80px;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+}
+
+.nv-icono {
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Colores de fondo por tipo — selectores más específicos para ganar a li:last-child */
+.linea-card ul li.nv-tipo-red    { background: #ffd6d6; border-color: #f5a0a0; }
+.linea-card ul li.nv-tipo-orange { background: #ffddc0; border-color: #f5b880; }
+.linea-card ul li.nv-tipo-yellow { background: #fff3a0; border-color: #e0cc50; }
+.linea-card ul li.nv-tipo-blue   { background: #ccd9ff; border-color: #99b0f0; }
+
+/* Botón bandera */
+.btn-flag {
+  background: #fff;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  width: 26px; height: 26px;
+  font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: border-color .15s;
+}
+.btn-flag:hover  { border-color: #e10600; }
+.btn-flag.activo { border-color: #e10600; border-width: 2px; }
+
+/* Acciones pendientes */
+.acciones-seccion {
+  margin-top: 24px;
+  margin-bottom: 32px;
+  border: 2px solid #e10600;
+  background: #fff;
+}
+.acciones-seccion h2 {
+  background: #e10600; color: #fff;
+  padding: 10px 16px; font-size: 18px;
+  margin: 0; text-align: center; letter-spacing: 0.5px;
+}
+.accion-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0d0d0;
+}
+.accion-item:last-child { border-bottom: none; }
+.accion-meta {
+  display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; margin-bottom: 6px;
+}
+.accion-linea {
+  font-size: 11px; font-weight: 700; background: #000; color: #fff;
+  padding: 2px 7px; border-radius: 4px;
+}
+.accion-hora  { font-size: 11px; color: #666; font-weight: 600; }
+.accion-tipo-icon { font-size: 15px; }
+.accion-resp-tag {
+  font-size: 11px; font-weight: 700; background: #e10600; color: #fff;
+  padding: 2px 7px; border-radius: 4px;
+}
+.accion-texto {
+  font-size: 13px; color: #222; line-height: 1.4; margin-bottom: 8px;
+}
+.accion-om-lectura {
+  font-size: 12px; color: #666;
+}
+.accion-om-lectura strong { color: #000; }
+
+/* Campos de acción en formulario */
+.accion-requerida-wrap {
+  flex: 1 1 100%;
+  background: #fff8e1;
+  border: 1px solid #f5c518;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.accion-req-top {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.accion-check-label {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.accion-check-label input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: #e10600; cursor: pointer;
+}
+.accion-responsable-wrap {
+  display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+}
+.accion-responsable-wrap select {
+  padding: 6px 10px; border: 1px solid #cfcfcf;
+  border-radius: 8px; font-size: 13px; background: #fff;
+}
+.accion-desc-label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-weight: 700; font-size: 13px;
+}
+.accion-desc-label textarea {
+  padding: 8px 10px; border: 1px solid #cfcfcf;
+  border-radius: 8px; font-size: 13px; resize: vertical; background: #fff;
+}
+.accion-om-inline {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700;
+}
+.accion-om-inline label { color: #555; white-space: nowrap; }
+.accion-om-inline input {
+  padding: 6px 10px; border: 1.5px solid #ccc;
+  border-radius: 6px; font-size: 13px; width: 220px; background: #fff;
+}
+
+/* Select de tipo en modo edición */
+.nv-edit-tipo {
+  grid-column: 1 / -1;
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  margin-bottom: 4px;
 }
 
 .linea-card li b {
@@ -1151,6 +1323,28 @@ input[type="date"]:focus {
   letter-spacing: 1px;
   text-transform: uppercase;
   border-left: 5px solid #e10600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cierre-card-close {
+  background: none;
+  border: 1px solid rgba(255,255,255,.4);
+  color: #fff;
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+
+.cierre-card-close:hover {
+  background: #e10600;
+  border-color: #e10600;
 }
 
 .cierre-row {
@@ -1372,6 +1566,10 @@ input[type="date"]:focus {
 
 @media (max-width: 1220px) {
   #btnFlotante { right: 16px; bottom: 16px; }
+}
+
+body.modo-lectura #btnFlotante {
+  display: none;
 }
 
 /* ===== PRODUCCIÓN DEL TURNO ===== */
