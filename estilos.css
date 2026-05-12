@@ -950,7 +950,7 @@ input[type="date"]:focus {
 }
 
 .nv-icono {
-  font-size: 16px;
+  font-size: 20px !important;
   line-height: 1.4;
   text-align: center;
 }
