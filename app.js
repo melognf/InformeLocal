@@ -272,6 +272,37 @@ form?.addEventListener('submit', e => {
    ========================= */
 const FORM_KEY = "novedades_v1";
 
+function comprimirImagen(file, maxW = 1200, quality = 0.72) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function abrirLightbox(src) {
+  document.getElementById("nv-lightbox")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "nv-lightbox";
+  overlay.className = "nv-lightbox";
+  overlay.addEventListener("click", () => overlay.remove());
+  const img = document.createElement("img");
+  img.src = src;
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+}
+
 const TIPOS_NOVEDAD = {
   mecanica:  { icono: "🔧", label: "PARO DE EQUIPO — MECÁNICA",        color: "red"    },
   electrica: { icono: "⚡", label: "PARO DE EQUIPO — ELÉCTRICA",        color: "red"    },
@@ -586,7 +617,7 @@ function renderNovedades() {
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
   sortNovedadesArray(saved);
 
-  saved.forEach(({ linea, hora, texto, tipo, minutos, accion }) => {
+  saved.forEach(({ linea, hora, texto, tipo, minutos, accion, imagenes }) => {
     const card = cards.find(c => c.querySelector("h3")?.firstChild?.textContent.trim() === linea);
     if (!card) return;
 
@@ -650,12 +681,33 @@ function renderNovedades() {
       renderNovedades();
     });
 
-    li.appendChild(b);
-    li.appendChild(spanIcono);
-    li.appendChild(spanTxt);
-    li.appendChild(spanMin);
-    li.appendChild(btnFlag);
-    li.appendChild(btnDel);
+    const mainRow = document.createElement("div");
+    mainRow.className = "nv-main-row";
+    mainRow.appendChild(b);
+    mainRow.appendChild(spanIcono);
+    mainRow.appendChild(spanTxt);
+    mainRow.appendChild(spanMin);
+    mainRow.appendChild(btnFlag);
+    mainRow.appendChild(btnDel);
+    li.appendChild(mainRow);
+
+    const imgs = Array.isArray(imagenes) ? imagenes : [];
+    if (imgs.length > 0) {
+      const divImgs = document.createElement("div");
+      divImgs.className = "nv-imgs-full";
+      imgs.forEach(src => {
+        const img = document.createElement("img");
+        img.src = src;
+        img.className = "nv-img-full";
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
+          abrirLightbox(src);
+        });
+        divImgs.appendChild(img);
+      });
+      li.appendChild(divImgs);
+    }
+
     ul.appendChild(li);
   });
 
@@ -830,9 +882,9 @@ function clearNovedades() {
   renderProdTurno();
 }
 
-function addNovedad(linea, hora, texto, tipo = "", minutos = 0, accion = null) {
+function addNovedad(linea, hora, texto, tipo = "", minutos = 0, accion = null, imagenes = []) {
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
-  saved.push({ linea, hora, texto, tipo, minutos: Number(minutos) || 0, accion });
+  saved.push({ linea, hora, texto, tipo, minutos: Number(minutos) || 0, accion, imagenes });
   sortNovedadesArray(saved);
   localStorage.setItem(FORM_KEY, JSON.stringify(saved));
   renderNovedades();
@@ -850,7 +902,22 @@ function deleteNovedad(linea, hora, texto) {
   renderProdTurno();
 }
 
-formNovedad?.addEventListener("submit", e => {
+document.getElementById("nvImagenes")?.addEventListener("change", function() {
+  const preview = document.getElementById("nvImgPreview");
+  if (!preview) return;
+  preview.innerHTML = "";
+  const files = Array.from(this.files).slice(0, 2);
+  if (this.files.length > 2) this.value = "";
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "nv-form-thumb";
+    preview.appendChild(img);
+  });
+});
+
+formNovedad?.addEventListener("submit", async e => {
   e.preventDefault();
 
   const selHora = document.getElementById("nvHora");
@@ -890,10 +957,15 @@ formNovedad?.addEventListener("submit", e => {
     return;
   }
 
-  addNovedad(linea, hora, texto, tipo, minutos, accion);
+  const nvImgFiles = Array.from(document.getElementById("nvImagenes")?.files || []).slice(0, 2);
+  const imagenes = nvImgFiles.length > 0 ? await Promise.all(nvImgFiles.map(f => comprimirImagen(f))) : [];
+
+  addNovedad(linea, hora, texto, tipo, minutos, accion, imagenes);
   document.getElementById("nvRequiereAccion").checked = false;
   document.getElementById("accionResponsableWrap").style.display = "none";
   document.getElementById("accionDescWrap").style.display = "none";
+  const previewEl = document.getElementById("nvImgPreview");
+  if (previewEl) previewEl.innerHTML = "";
   formNovedad.reset();
   buildNvHoraOptions();
   renderNovedades();
@@ -1277,7 +1349,6 @@ document.getElementById("tn")?.addEventListener("change", () => {
 document.addEventListener("DOMContentLoaded", restoreEncabezado);
 
 document.getElementById("cgClear")?.addEventListener("click", clearEncabezado);
-document.getElementById("nvClear")?.addEventListener("click", clearEncabezado);
 
 /* =========================
    PRODUCCIÓN DEL TURNO (localStorage)
