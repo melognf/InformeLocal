@@ -865,7 +865,7 @@ function renderAcciones() {
 
     const omDiv = document.createElement("div");
     omDiv.className = "accion-om-lectura";
-    omDiv.innerHTML = `OM N°: <strong>${accion.om || "—"}</strong>`;
+    omDiv.innerHTML = `AVISO N°: <strong>${accion.om || "—"}</strong>`;
 
     item.appendChild(meta);
     item.appendChild(texto);
@@ -902,20 +902,20 @@ function deleteNovedad(linea, hora, texto) {
   renderProdTurno();
 }
 
-document.getElementById("nvImagenes")?.addEventListener("change", function() {
-  const preview = document.getElementById("nvImgPreview");
-  if (!preview) return;
-  preview.innerHTML = "";
-  const files = Array.from(this.files).slice(0, 2);
-  if (this.files.length > 2) this.value = "";
-  files.forEach(file => {
-    const url = URL.createObjectURL(file);
+function setupImgPreview(inputId, previewId) {
+  document.getElementById(inputId)?.addEventListener("change", function() {
+    const preview = document.getElementById(previewId);
+    if (!preview) return;
+    preview.innerHTML = "";
+    if (!this.files[0]) return;
     const img = document.createElement("img");
-    img.src = url;
+    img.src = URL.createObjectURL(this.files[0]);
     img.className = "nv-form-thumb";
     preview.appendChild(img);
   });
-});
+}
+setupImgPreview("nvImagen1", "nvImgPreview1");
+setupImgPreview("nvImagen2", "nvImgPreview2");
 
 formNovedad?.addEventListener("submit", async e => {
   e.preventDefault();
@@ -957,15 +957,19 @@ formNovedad?.addEventListener("submit", async e => {
     return;
   }
 
-  const nvImgFiles = Array.from(document.getElementById("nvImagenes")?.files || []).slice(0, 2);
-  const imagenes = nvImgFiles.length > 0 ? await Promise.all(nvImgFiles.map(f => comprimirImagen(f))) : [];
+  const img1 = document.getElementById("nvImagen1")?.files[0];
+  const img2 = document.getElementById("nvImagen2")?.files[0];
+  const imgFiles = [img1, img2].filter(Boolean);
+  const imagenes = imgFiles.length > 0 ? await Promise.all(imgFiles.map(f => comprimirImagen(f))) : [];
 
   addNovedad(linea, hora, texto, tipo, minutos, accion, imagenes);
   document.getElementById("nvRequiereAccion").checked = false;
   document.getElementById("accionResponsableWrap").style.display = "none";
   document.getElementById("accionDescWrap").style.display = "none";
-  const previewEl = document.getElementById("nvImgPreview");
-  if (previewEl) previewEl.innerHTML = "";
+  ["nvImgPreview1", "nvImgPreview2"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
   formNovedad.reset();
   buildNvHoraOptions();
   renderNovedades();
