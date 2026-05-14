@@ -923,11 +923,12 @@ input[type="date"]:focus {
 .linea-card ul li {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 6px;
   padding: 7px 8px;
   border-radius: 6px;
   margin-bottom: 4px;
-  border: 1px solid transparent;
+  border: 1px solid #ccc;
 }
 
 .nv-main-row {
