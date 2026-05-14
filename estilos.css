@@ -987,18 +987,16 @@ input[type="date"]:focus {
 .nv-imgs-full {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 .nv-img-full {
-  flex: 1 1 0;
-  min-width: 0;
-  max-height: 360px;
-  width: 100%;
-  object-fit: contain;
-  object-position: left top;
+  flex: 0 0 auto;
+  max-height: 300px;
+  max-width: 100%;
+  width: auto;
   border-radius: 6px;
   border: 1.5px solid #bbb;
   cursor: zoom-in;
-  background: #f8f8f8;
 }
 
 /* Lightbox */
