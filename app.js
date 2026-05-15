@@ -1708,12 +1708,68 @@ btnInforme?.addEventListener("click", async () => {
    ========================= */
 const btnCaptura = document.getElementById("btnCaptura");
 
+function prepararVistaCaptura() {
+  const restaurar = [];
+
+  const invisibilizar = sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      restaurar.push({ el, visibility: el.style.visibility, opacity: el.style.opacity });
+      el.style.visibility = 'hidden';
+      el.style.opacity = '0';
+    });
+  };
+
+  const ocultar = sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      restaurar.push({ el, display: el.style.display });
+      el.style.display = 'none';
+    });
+  };
+
+  // Botones e inputs de edición → invisibles (mantienen espacio en layout)
+  invisibilizar('.cg-form');
+  invisibilizar('.form-novedad');
+  invisibilizar('.nv-actions');
+  invisibilizar('#modeBtn');
+  invisibilizar('#btnInforme');
+  invisibilizar('#btnCaptura');
+  invisibilizar('#cgClear');
+  invisibilizar('#nvClear');
+  invisibilizar('.nv-del');
+  invisibilizar('.btn-flag');
+  invisibilizar('.cierres-btns');
+  invisibilizar('#formBarra');
+  invisibilizar('.cronograma-controles');
+
+  // Linea-cards vacías → ocultar completamente (no hay contenido que preservar)
+  document.querySelectorAll('.linea-card').forEach(card => {
+    const ul = card.querySelector('ul');
+    if (!ul || ul.children.length === 0) {
+      restaurar.push({ el: card, display: card.style.display });
+      card.style.display = 'none';
+    }
+  });
+
+  return restaurar;
+}
+
+function restaurarVistaCaptura(restaurar) {
+  restaurar.forEach(entry => {
+    if ('display' in entry) {
+      entry.el.style.display = entry.display;
+    } else {
+      entry.el.style.visibility = entry.visibility;
+      entry.el.style.opacity = entry.opacity;
+    }
+  });
+}
+
 btnCaptura?.addEventListener("click", async () => {
   btnCaptura.classList.add("is-busy");
   btnCaptura.setAttribute("aria-busy", "true");
   btnCaptura.disabled = true;
 
-  const ocultos = prepararVistaPDF();
+  const restaurar = prepararVistaCaptura();
   window.scrollTo(0, 0);
   await new Promise(r => setTimeout(r, 500));
 
@@ -1724,7 +1780,7 @@ btnCaptura?.addEventListener("click", async () => {
     link.href = canvas.toDataURL("image/png");
     link.click();
   } finally {
-    restaurarVistaPDF(ocultos);
+    restaurarVistaCaptura(restaurar);
     btnCaptura.classList.remove("is-busy");
     btnCaptura.removeAttribute("aria-busy");
     btnCaptura.disabled = false;
