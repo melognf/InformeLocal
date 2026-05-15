@@ -1084,7 +1084,7 @@ input[type="date"]:focus {
   margin: 0; text-align: center; letter-spacing: 0.5px;
 }
 .accion-item {
-  padding: 12px 14px;
+  padding: 20px 18px;
   border-bottom: 1px solid #f0d0d0;
 }
 .accion-item:last-child { border-bottom: none; }
