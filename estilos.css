@@ -962,7 +962,10 @@ input[type="date"]:focus {
   text-align: center;
 }
 
-/* Colores de fondo por tipo — selectores más específicos para ganar a li:last-child */
+/* Restaurar borde inferior en último item de novedades (anula li:last-child genérico) */
+.linea-card ul li:last-child { border-bottom: 1px solid #ccc; }
+
+/* Colores de fondo por tipo */
 .linea-card ul li.nv-tipo-red    { background: #ffd6d6; border-color: #f5a0a0; }
 .linea-card ul li.nv-tipo-orange { background: #ffddc0; border-color: #f5b880; }
 .linea-card ul li.nv-tipo-yellow { background: #fff3a0; border-color: #e0cc50; }
