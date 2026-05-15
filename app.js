@@ -1548,45 +1548,155 @@ function clearProdTurno() {
    ========================= */
 const btnInforme = document.getElementById("btnInforme");
 
-function toggleBotoneras(visible) {
-  const secciones = document.querySelectorAll('.cg-form, .form-novedad, .acciones, button');
-  secciones.forEach(el => el.style.display = visible ? '' : 'none');
+function prepararVistaPDF() {
+  const ocultos = [];
+  const hide = sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      ocultos.push({ el, prev: el.style.display });
+      el.style.display = 'none';
+    });
+  };
+
+  // UI de edición y botones
+  hide('.cg-form');
+  hide('.form-novedad');
+  hide('.nv-actions');
+  hide('#modeBtn');
+  hide('#btnInforme');
+  hide('#cgClear');
+  hide('#nvClear');
+  hide('.nv-del');
+  hide('.btn-flag');
+  hide('.cierres-btns');
+  hide('#formBarra');
+  hide('.cronograma-controles');
+
+  // Linea-cards sin novedades
+  document.querySelectorAll('.linea-card').forEach(card => {
+    const ul = card.querySelector('ul');
+    if (!ul || ul.children.length === 0) {
+      ocultos.push({ el: card, prev: card.style.display });
+      card.style.display = 'none';
+    }
+  });
+
+  // Sección novedades: ocultar título si todas las cards están vacías
+  const novedadesSection = document.getElementById('novedades');
+  if (novedadesSection) {
+    const hayNovedades = Array.from(novedadesSection.querySelectorAll('.linea-card ul')).some(ul => ul.children.length > 0);
+    if (!hayNovedades) {
+      ocultos.push({ el: novedadesSection, prev: novedadesSection.style.display });
+      novedadesSection.style.display = 'none';
+    }
+  }
+
+  return ocultos;
+}
+
+function restaurarVistaPDF(ocultos) {
+  ocultos.forEach(({ el, prev }) => { el.style.display = prev; });
+}
+
+function obtenerPuntosDeCorte(canvasW, canvasH, scale, pageHpx) {
+  const puntos = [];
+  const scrollY = window.scrollY;
+
+  // Elementos que no queremos cortar por la mitad
+  const elementos = document.querySelectorAll(
+    '.linea-card, .acciones-seccion, .prod-turno, .cierres-seccion, #cronograma, header'
+  );
+
+  const rects = Array.from(elementos)
+    .map(el => {
+      const r = el.getBoundingClientRect();
+      return {
+        top: (r.top + scrollY) * scale,
+        bottom: (r.bottom + scrollY) * scale,
+      };
+    })
+    .filter(r => r.bottom > 0 && r.top < canvasH)
+    .sort((a, b) => a.top - b.top);
+
+  let paginaFin = pageHpx;
+  while (paginaFin < canvasH) {
+    const margen = pageHpx * 0.25;
+    let mejorCorte = paginaFin;
+    let minDist = Infinity;
+
+    for (const r of rects) {
+      // Cortar justo antes de que empiece un elemento
+      if (r.top > paginaFin - margen && r.top < paginaFin + margen) {
+        const d = Math.abs(r.top - paginaFin);
+        if (d < minDist) { minDist = d; mejorCorte = r.top; }
+      }
+      // Cortar justo después de que termina un elemento
+      if (r.bottom > paginaFin - margen && r.bottom < paginaFin + margen) {
+        const d = Math.abs(r.bottom - paginaFin);
+        if (d < minDist) { minDist = d; mejorCorte = r.bottom; }
+      }
+    }
+
+    puntos.push(Math.min(Math.round(mejorCorte), canvasH));
+    paginaFin = mejorCorte + pageHpx;
+  }
+
+  puntos.push(canvasH);
+  return puntos;
 }
 
 btnInforme?.addEventListener("click", async () => {
-  toggleBotoneras(false);
-
   btnInforme.classList.add("is-busy");
   btnInforme.setAttribute("aria-busy", "true");
   btnInforme.disabled = true;
 
-  try {
-    await new Promise(r => setTimeout(r, 600));
+  const ocultos = prepararVistaPDF();
+  window.scrollTo(0, 0);
+  await new Promise(r => setTimeout(r, 500));
 
-    const area = document.body;
-    const canvas = await html2canvas(area, { scale: 2 });
+  try {
+    const scale = 2;
+    const canvas = await html2canvas(document.body, { scale, useCORS: true, allowTaint: true });
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p", "mm", "a4");
 
-    const imgData = canvas.toDataURL("image/png");
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgH = (canvas.height * pageW) / canvas.width;
+    const canvasW = canvas.width;
+    const canvasH = canvas.height;
+    const mmPerPx = pageW / canvasW;
+    const pageHpx = pageH / mmPerPx;
 
-    if (imgH <= pageH) {
-      pdf.addImage(imgData, "PNG", 0, 0, pageW, imgH);
+    const totalHmm = canvasH * mmPerPx;
+
+    if (totalHmm <= pageH) {
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, pageW, totalHmm);
     } else {
-      let y = 0;
-      while (y < imgH) {
-        pdf.addImage(imgData, "PNG", 0, -y * (pageH / imgH), pageW, imgH);
-        y += pageH;
-        if (y < imgH - 10) pdf.addPage();
+      const cortes = obtenerPuntosDeCorte(canvasW, canvasH, scale, pageHpx);
+      let prevY = 0;
+      let primeraHoja = true;
+
+      for (const corteY of cortes) {
+        const altoPx = corteY - prevY;
+        if (altoPx <= 0) { prevY = corteY; continue; }
+
+        const slice = document.createElement("canvas");
+        slice.width = canvasW;
+        slice.height = altoPx;
+        const ctx = slice.getContext("2d");
+        ctx.drawImage(canvas, 0, prevY, canvasW, altoPx, 0, 0, canvasW, altoPx);
+
+        const altomm = altoPx * mmPerPx;
+        if (!primeraHoja) pdf.addPage();
+        pdf.addImage(slice.toDataURL("image/png"), "PNG", 0, 0, pageW, altomm);
+
+        primeraHoja = false;
+        prevY = corteY;
       }
     }
 
     pdf.save("informe-produccion.pdf");
   } finally {
-    toggleBotoneras(true);
+    restaurarVistaPDF(ocultos);
     btnInforme.classList.remove("is-busy");
     btnInforme.removeAttribute("aria-busy");
     btnInforme.disabled = false;
