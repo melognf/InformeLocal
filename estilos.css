@@ -1009,12 +1009,12 @@ input[type="date"]:focus {
   order: -1;
   flex-direction: column;
   flex-shrink: 0;
-  width: 180px;
+  width: 360px;
   gap: 6px;
 }
 .nv-has-img .nv-img-full {
-  max-height: 160px;
-  max-width: 180px;
+  max-height: 320px;
+  max-width: 360px;
   width: 100%;
   object-fit: cover;
 }
@@ -1026,7 +1026,7 @@ input[type="date"]:focus {
 
 /* Texto de novedad */
 .nv-text {
-  font-size: 14px;
+  font-size: 17px;
   line-height: 1.45;
 }
 
