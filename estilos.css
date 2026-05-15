@@ -1000,6 +1000,7 @@ input[type="date"]:focus {
 /* Layout con 2+ imágenes: fotos arriba en fila, texto abajo */
 .linea-card ul li.nv-has-multi-img {
   flex-direction: column;
+  gap: 16px;
 }
 .nv-has-multi-img .nv-imgs-full {
   display: flex;
