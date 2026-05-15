@@ -995,7 +995,6 @@ input[type="date"]:focus {
   max-width: 100%;
   width: auto;
   border-radius: 6px;
-  border: 1.5px solid #bbb;
   cursor: zoom-in;
 }
 
@@ -1016,7 +1015,6 @@ input[type="date"]:focus {
   width: 100%;
   object-fit: contain;
   border-radius: 6px;
-  border: 1.5px solid #bbb;
   cursor: zoom-in;
 }
 .nv-has-multi-img .nv-main-row {
