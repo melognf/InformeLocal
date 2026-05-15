@@ -693,7 +693,7 @@ function renderNovedades() {
 
     const imgs = Array.isArray(imagenes) ? imagenes : [];
     if (imgs.length > 0) {
-      li.classList.add("nv-has-img");
+      li.classList.add(imgs.length === 1 ? "nv-has-img" : "nv-has-multi-img");
       const divImgs = document.createElement("div");
       divImgs.className = "nv-imgs-full";
       imgs.forEach(src => {

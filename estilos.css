@@ -999,6 +999,30 @@ input[type="date"]:focus {
   cursor: zoom-in;
 }
 
+/* Layout con 2+ imágenes: fotos arriba en fila, texto abajo */
+.linea-card ul li.nv-has-multi-img {
+  flex-direction: column;
+}
+.nv-has-multi-img .nv-imgs-full {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.nv-has-multi-img .nv-img-full {
+  flex: 1 1 0;
+  min-width: 0;
+  max-height: 320px;
+  width: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1.5px solid #bbb;
+  cursor: zoom-in;
+}
+.nv-has-multi-img .nv-main-row {
+  width: 100%;
+}
+
 /* Layout con imagen: imagen a la izquierda, texto a la derecha */
 .linea-card ul li.nv-has-img {
   flex-direction: row;
