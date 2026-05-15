@@ -1013,10 +1013,10 @@ input[type="date"]:focus {
   gap: 6px;
 }
 .nv-has-img .nv-img-full {
-  max-height: 320px;
   max-width: 360px;
   width: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
 }
 .nv-has-img .nv-main-row {
   flex: 1;
