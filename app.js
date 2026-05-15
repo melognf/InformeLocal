@@ -1709,59 +1709,24 @@ btnInforme?.addEventListener("click", async () => {
 const btnCaptura = document.getElementById("btnCaptura");
 
 function prepararVistaCaptura() {
-  const restaurar = [];
+  document.body.classList.add('capturando');
 
-  const invisibilizar = sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      restaurar.push({ el, visibility: el.style.visibility, opacity: el.style.opacity });
-      el.style.visibility = 'hidden';
-      el.style.opacity = '0';
-    });
-  };
-
-  const ocultar = sel => {
-    document.querySelectorAll(sel).forEach(el => {
-      restaurar.push({ el, display: el.style.display });
-      el.style.display = 'none';
-    });
-  };
-
-  // Botones e inputs de edición → invisibles (mantienen espacio en layout)
-  invisibilizar('.cg-form');
-  invisibilizar('.form-novedad');
-  invisibilizar('.nv-actions');
-  invisibilizar('#modeBtn');
-  invisibilizar('#btnInforme');
-  invisibilizar('#btnCaptura');
-  invisibilizar('#cgClear');
-  invisibilizar('#nvClear');
-  invisibilizar('.nv-del');
-  invisibilizar('.btn-flag');
-  invisibilizar('.cierres-btns');
-  invisibilizar('#formBarra');
-  invisibilizar('.cronograma-controles');
-
-  // Linea-cards vacías → ocultar completamente (no hay contenido que preservar)
+  // Ocultar linea-cards vacías
+  const cardsOcultas = [];
   document.querySelectorAll('.linea-card').forEach(card => {
     const ul = card.querySelector('ul');
     if (!ul || ul.children.length === 0) {
-      restaurar.push({ el: card, display: card.style.display });
       card.style.display = 'none';
+      cardsOcultas.push(card);
     }
   });
 
-  return restaurar;
+  return cardsOcultas;
 }
 
-function restaurarVistaCaptura(restaurar) {
-  restaurar.forEach(entry => {
-    if ('display' in entry) {
-      entry.el.style.display = entry.display;
-    } else {
-      entry.el.style.visibility = entry.visibility;
-      entry.el.style.opacity = entry.opacity;
-    }
-  });
+function restaurarVistaCaptura(cardsOcultas) {
+  document.body.classList.remove('capturando');
+  cardsOcultas.forEach(card => { card.style.display = ''; });
 }
 
 btnCaptura?.addEventListener("click", async () => {
@@ -1769,7 +1734,7 @@ btnCaptura?.addEventListener("click", async () => {
   btnCaptura.setAttribute("aria-busy", "true");
   btnCaptura.disabled = true;
 
-  const restaurar = prepararVistaCaptura();
+  const cardsOcultas = prepararVistaCaptura();
   window.scrollTo(0, 0);
   await new Promise(r => setTimeout(r, 500));
 
@@ -1780,7 +1745,7 @@ btnCaptura?.addEventListener("click", async () => {
     link.href = canvas.toDataURL("image/png");
     link.click();
   } finally {
-    restaurarVistaCaptura(restaurar);
+    restaurarVistaCaptura(cardsOcultas);
     btnCaptura.classList.remove("is-busy");
     btnCaptura.removeAttribute("aria-busy");
     btnCaptura.disabled = false;

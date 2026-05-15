@@ -1055,6 +1055,26 @@ input[type="date"]:focus {
   line-height: 1.4 !important;
 }
 
+/* ===== Modo captura (screenshot) ===== */
+body.capturando .cg-form,
+body.capturando .form-novedad,
+body.capturando .nv-actions,
+body.capturando #modeBtn,
+body.capturando #btnInforme,
+body.capturando #btnCaptura,
+body.capturando #cgClear,
+body.capturando #nvClear,
+body.capturando .cierres-btns,
+body.capturando #formBarra,
+body.capturando .cronograma-controles,
+body.capturando .nv-del,
+body.capturando .btn-flag { display: none; }
+
+/* Colapsar columnas de botones en el grid para que no quede espacio vacío */
+body.capturando .nv-main-row {
+  grid-template-columns: 60px 26px 1fr 44px;
+}
+
 /* Lightbox */
 .nv-lightbox {
   position: fixed;
