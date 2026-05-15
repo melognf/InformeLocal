@@ -1026,8 +1026,8 @@ input[type="date"]:focus {
 
 /* Texto de novedad */
 .nv-text {
-  font-size: 100px;
-  line-height: 1.4;
+  font-size: 100px !important;
+  line-height: 1.4 !important;
 }
 
 /* Lightbox */
