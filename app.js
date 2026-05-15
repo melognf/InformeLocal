@@ -1704,6 +1704,34 @@ btnInforme?.addEventListener("click", async () => {
 });
 
 /* =========================
+   CAPTURA IMAGEN
+   ========================= */
+const btnCaptura = document.getElementById("btnCaptura");
+
+btnCaptura?.addEventListener("click", async () => {
+  btnCaptura.classList.add("is-busy");
+  btnCaptura.setAttribute("aria-busy", "true");
+  btnCaptura.disabled = true;
+
+  const ocultos = prepararVistaPDF();
+  window.scrollTo(0, 0);
+  await new Promise(r => setTimeout(r, 500));
+
+  try {
+    const canvas = await html2canvas(document.body, { scale: 2, useCORS: true, allowTaint: true });
+    const link = document.createElement("a");
+    link.download = "informe-produccion.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  } finally {
+    restaurarVistaPDF(ocultos);
+    btnCaptura.classList.remove("is-busy");
+    btnCaptura.removeAttribute("aria-busy");
+    btnCaptura.disabled = false;
+  }
+});
+
+/* =========================
    MODO (CARGA / LECTURA)
    ========================= */
 (function () {
