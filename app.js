@@ -1002,6 +1002,11 @@ nvClear?.addEventListener("click", () => {
   clearNovedades();
   clearCierres();
   clearProdTurno();
+  localStorage.removeItem(MICRO_KEY);
+  localStorage.removeItem(MICRO_DISP_KEY);
+  closeMicroModal();
+  renderMicroParadas();
+  renderResumenTurno();
 });
 cgClearBtn?.addEventListener("click", () => cgClear());
 
