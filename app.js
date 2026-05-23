@@ -272,6 +272,26 @@ form?.addEventListener('submit', e => {
    ========================= */
 const FORM_KEY = "novedades_v1";
 
+const MICRO_KEY = "micro_paradas_v1";
+const MICRO_DISP_KEY = "micro_disponible_v1";
+const CIERRES_KEY = "cierres_v1";
+let _eficChart = null;
+
+const LINEAS_PRODUCCION = ["LÍNEA 1", "LÍNEA 2", "LÍNEA 3", "LÍNEA 5", "LÍNEA 6", "LÍNEA 7"];
+
+const TIPOS_MICRO = {
+  mecanica:      { icono: "🔧", label: "MECÁNICA" },
+  electrica:     { icono: "⚡", label: "ELÉCTRICA" },
+  operativa:     { icono: "👷", label: "OPERATIVA" },
+  calidad:       { icono: "⚠️", label: "CALIDAD" },
+  materias:      { icono: "📦", label: "MAT. PRIMAS" },
+  soplado:       { icono: "💨", label: "SOPLADO" },
+  ajenos:        { icono: "🔀", label: "AJENOS" },
+  cip:           { icono: "🧹", label: "CIP" },
+  arranque:      { icono: "🟡", label: "ARRANQUE" },
+  mantenimiento: { icono: "🟫", label: "MANTENIMIENTO" },
+};
+
 function comprimirImagen(file, maxW = 1200, quality = 0.72) {
   return new Promise(resolve => {
     const reader = new FileReader();
@@ -734,6 +754,8 @@ function renderNovedades() {
   } else if (seccionNovedades) {
     seccionNovedades.style.display = "";
   }
+
+  renderResumenTurno();
 }
 
 /* ======== Semáforo de líneas ======== */
@@ -1321,7 +1343,11 @@ function saveEncabezado() {
 function restoreEncabezado() {
   const saved = JSON.parse(localStorage.getItem(ENC_KEY) || "{}");
   if (saved.turno) document.getElementById("turno").value = saved.turno;
-  if (saved.tn) document.getElementById("tn").value = saved.tn;
+  if (saved.tn) {
+    const tnEl = document.getElementById("tn");
+    tnEl.value = saved.tn;
+    tnEl.dispatchEvent(new Event("change"));
+  }
   if (saved.fecha) document.getElementById("fecha").value = saved.fecha;
   if (saved.dia) document.getElementById("dia").value = saved.dia;
   if (saved.lideres) document.getElementById("lideres").value = saved.lideres;
@@ -1771,6 +1797,7 @@ btnCaptura?.addEventListener("click", async () => {
       "#formNovedad button",
       "#btnEditarFormatos",
       "#btnGrabarFormatos",
+      "#microParadasWrap",
     ];
 
     selectors.forEach(sel => {
@@ -1786,6 +1813,11 @@ btnCaptura?.addEventListener("click", async () => {
     });
   }
 
+  function cierresTienenDatos() {
+    const data = getCierresData();
+    return Object.values(data).some(linea => linea.open === true);
+  }
+
   function applyMode(mode) {
     const lectura = mode === "lectura";
     document.body.classList.toggle("modo-lectura", lectura);
@@ -1794,9 +1826,17 @@ btnCaptura?.addEventListener("click", async () => {
     updateBarDeleteVisibility(!lectura);
     if (lectura) setTableEditing(false);
     localStorage.setItem(MODE_KEY, mode);
+
+    const secCierres = document.getElementById("cierres");
+    if (secCierres) {
+      secCierres.style.display = (!lectura || cierresTienenDatos()) ? "" : "none";
+    }
+
     renderNovedades();
     restoreTabla();
     renderProdTurno();
+    renderMicroParadas();
+    renderResumenTurno();
   }
 
   modeBtn.onclick = () => {
@@ -1810,8 +1850,6 @@ btnCaptura?.addEventListener("click", async () => {
 /* =========================
    CIERRES (localStorage)
    ========================= */
-const CIERRES_KEY = "cierres_v1";
-
 function getCierresData() {
   return JSON.parse(localStorage.getItem(CIERRES_KEY) || "{}");
 }
@@ -2059,3 +2097,464 @@ document.addEventListener("DOMContentLoaded", () => {
     tr.querySelectorAll("td").forEach((td, i) => td.setAttribute("data-label", labels[i] || ""));
   });
 });
+
+/* =========================
+   MICRO-PARADAS
+   ========================= */
+function getMicroParadas() {
+  return JSON.parse(localStorage.getItem(MICRO_KEY) || "[]");
+}
+
+function getDisponibleDesde() {
+  return JSON.parse(localStorage.getItem(MICRO_DISP_KEY) || "{}");
+}
+
+function saveDisponibleDesde(linea, hora) {
+  const data = getDisponibleDesde();
+  data[linea] = hora;
+  localStorage.setItem(MICRO_DISP_KEY, JSON.stringify(data));
+  renderResumenTurno();
+}
+
+function addMicroParada(linea, causa, minutos, nota) {
+  const list = getMicroParadas();
+  list.push({ linea, causa, minutos: Number(minutos) || 0, nota: nota || "" });
+  localStorage.setItem(MICRO_KEY, JSON.stringify(list));
+  renderMicroParadas();
+  renderResumenTurno();
+}
+
+function deleteMicroParada(index) {
+  const list = getMicroParadas();
+  list.splice(index, 1);
+  localStorage.setItem(MICRO_KEY, JSON.stringify(list));
+  renderMicroParadas();
+  renderResumenTurno();
+}
+
+function horaInicioTurno() {
+  const rango = document.getElementById("cgRango")?.value || "06-18";
+  return rango === "06-18" ? "06:00" : "18:00";
+}
+
+function buildMicroHoraOpts(sel, selected) {
+  const rango = document.getElementById("cgRango")?.value || "06-18";
+  const opts = [];
+  if (rango === "06-18") {
+    for (let h = 6; h <= 18; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
+      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
+    }
+  } else {
+    for (let h = 18; h <= 23; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
+      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
+    }
+    for (let h = 0; h <= 6; h++) {
+      const v = String(h).padStart(2, "0") + ":00";
+      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
+    }
+  }
+  sel.innerHTML = opts.join("");
+  sel.value = selected;
+}
+
+function renderMicroParadas() {
+  const wrap = document.getElementById("microParadasWrap");
+  if (!wrap) return;
+
+  wrap.style.display = isLectura() ? "none" : "";
+  if (isLectura()) return;
+
+  const lista = document.getElementById("microLista");
+  if (!lista) return;
+  lista.innerHTML = "";
+
+  const all = getMicroParadas();
+  const byLinea = {};
+  all.forEach((item, idx) => {
+    if (!byLinea[item.linea]) byLinea[item.linea] = [];
+    byLinea[item.linea].push({ ...item, _idx: idx });
+  });
+
+  const lineasConDatos = LINEAS_PRODUCCION.filter(l => (byLinea[l] || []).length > 0);
+  if (lineasConDatos.length === 0) return;
+
+  const chips = document.createElement("div");
+  chips.className = "micro-chips";
+
+  lineasConDatos.forEach(linea => {
+    const items = byLinea[linea];
+    const total = items.reduce((s, i) => s + (Number(i.minutos) || 0), 0);
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "micro-chip";
+    chip.innerHTML = `<span class="micro-chip-linea">${linea}</span><span class="micro-chip-min">${total} min</span><span class="micro-chip-arrow">›</span>`;
+    chip.addEventListener("click", () => openMicroModal());
+    chips.appendChild(chip);
+  });
+
+  lista.appendChild(chips);
+}
+
+function buildMicroGrupo(linea, items, dispDesde) {
+  const totalMin = items.reduce((s, i) => s + (Number(i.minutos) || 0), 0);
+
+  const grupo = document.createElement("div");
+  grupo.className = "micro-linea-grupo";
+
+  const header = document.createElement("div");
+  header.className = "micro-linea-header";
+
+  const nombre = document.createElement("span");
+  nombre.className = "micro-linea-nombre";
+  nombre.textContent = linea;
+
+  const dispLabel = document.createElement("label");
+  dispLabel.className = "micro-disp-label";
+  dispLabel.textContent = "Disponible desde: ";
+
+  const dispSel = document.createElement("select");
+  dispSel.className = "micro-disp-select";
+  buildMicroHoraOpts(dispSel, dispDesde[linea] || horaInicioTurno());
+  dispSel.addEventListener("change", () => saveDisponibleDesde(linea, dispSel.value));
+  dispLabel.appendChild(dispSel);
+
+  const totalSpan = document.createElement("span");
+  totalSpan.className = "micro-linea-total";
+  totalSpan.textContent = `${totalMin} min no rep.`;
+
+  header.appendChild(nombre);
+  header.appendChild(dispLabel);
+  header.appendChild(totalSpan);
+  grupo.appendChild(header);
+
+  const itemsDiv = document.createElement("div");
+  itemsDiv.className = "micro-linea-items";
+
+  items.forEach(item => {
+    const tipo = TIPOS_MICRO[item.causa] || { icono: "—", label: item.causa || "Sin clasificar" };
+    const row = document.createElement("div");
+    row.className = "micro-item";
+
+    const causa = document.createElement("span");
+    causa.className = "micro-item-causa";
+    causa.textContent = `${tipo.icono} ${tipo.label}`;
+
+    const min = document.createElement("span");
+    min.className = "micro-item-min";
+    min.textContent = `${item.minutos} min`;
+
+    const btnDel = document.createElement("button");
+    btnDel.className = "micro-item-del";
+    btnDel.textContent = "×";
+    btnDel.type = "button";
+    btnDel.addEventListener("click", () => {
+      if (confirm("¿Eliminar este tiempo?")) {
+        deleteMicroParada(item._idx);
+        if (getMicroParadas().length === 0) {
+          closeMicroModal();
+        } else {
+          renderMicroModalBody();
+        }
+      }
+    });
+
+    row.appendChild(causa);
+    row.appendChild(min);
+
+    if (item.nota) {
+      const nota = document.createElement("span");
+      nota.className = "micro-item-nota";
+      nota.textContent = item.nota;
+      row.appendChild(nota);
+    }
+
+    row.appendChild(btnDel);
+    itemsDiv.appendChild(row);
+  });
+
+  grupo.appendChild(itemsDiv);
+  return grupo;
+}
+
+function renderMicroModalBody() {
+  const body = document.getElementById("microModalBody");
+  if (!body) return;
+  body.innerHTML = "";
+
+  const all = getMicroParadas();
+  const dispDesde = getDisponibleDesde();
+
+  const byLinea = {};
+  all.forEach((item, idx) => {
+    if (!byLinea[item.linea]) byLinea[item.linea] = [];
+    byLinea[item.linea].push({ ...item, _idx: idx });
+  });
+
+  LINEAS_PRODUCCION.forEach(linea => {
+    const items = byLinea[linea] || [];
+    if (items.length === 0) return;
+    body.appendChild(buildMicroGrupo(linea, items, dispDesde));
+  });
+}
+
+function openMicroModal() {
+  const modal = document.getElementById("microModal");
+  if (!modal) return;
+  renderMicroModalBody();
+  modal.classList.add("open");
+}
+
+function closeMicroModal() {
+  const modal = document.getElementById("microModal");
+  if (modal) modal.classList.remove("open");
+}
+
+document.getElementById("formMicro")?.addEventListener("submit", e => {
+  e.preventDefault();
+  const linea = document.getElementById("mpLinea")?.value.trim();
+  const causa = document.getElementById("mpCausa")?.value.trim();
+  const minutos = Number(document.getElementById("mpMinutos")?.value) || 0;
+  const nota = (document.getElementById("mpNota")?.value || "").trim();
+
+  if (!linea) { alert("Seleccioná una línea."); return; }
+  if (minutos <= 0) { alert("Ingresá los minutos."); return; }
+
+  addMicroParada(linea, causa, minutos, nota);
+
+  document.getElementById("mpLinea").value = "";
+  document.getElementById("mpCausa").value = "";
+  document.getElementById("mpMinutos").value = "";
+  document.getElementById("mpNota").value = "";
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderMicroParadas();
+  renderResumenTurno();
+
+  document.getElementById("microModalClose")?.addEventListener("click", closeMicroModal);
+  document.getElementById("microModal")?.addEventListener("click", e => {
+    if (e.target === e.currentTarget) closeMicroModal();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeMicroModal();
+  });
+});
+
+document.getElementById("cgRango")?.addEventListener("change", () => {
+  renderMicroParadas();
+  renderResumenTurno();
+});
+
+/* =========================
+   RESUMEN DEL TURNO
+   ========================= */
+function minEntreHoras(desde, hasta, rango) {
+  const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };
+  let d = toMin(desde);
+  let h = toMin(hasta);
+  if (rango === "18-06" && h <= d) h += 24 * 60;
+  return Math.max(0, h - d);
+}
+
+function calcEficienciaPorLinea() {
+  const novedades = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+  const micro = getMicroParadas();
+  const dispDesde = getDisponibleDesde();
+  const rango = document.getElementById("cgRango")?.value || "06-18";
+  const finTurno = rango === "06-18" ? "18:00" : "06:00";
+
+  const result = {};
+  LINEAS_PRODUCCION.forEach(linea => {
+    const inicio = dispDesde[linea] || horaInicioTurno();
+    const disponible = minEntreHoras(inicio, finTurno, rango);
+
+    const perdidosNov = novedades
+      .filter(n => n.linea === linea)
+      .reduce((s, n) => s + (Number(n.minutos) || 0), 0);
+
+    const perdidosMicro = micro
+      .filter(m => m.linea === linea)
+      .reduce((s, m) => s + (Number(m.minutos) || 0), 0);
+
+    const totalPerdidos = perdidosNov + perdidosMicro;
+    const efic = disponible > 0 ? Math.max(0, Math.round(((disponible - totalPerdidos) / disponible) * 100)) : null;
+
+    result[linea] = { disponible, perdidosNov, perdidosMicro, totalPerdidos, efic };
+  });
+
+  return result;
+}
+
+function renderResumenTurno() {
+  const seccion = document.getElementById("resumenTurno");
+  if (!seccion) return;
+
+  const efic = calcEficienciaPorLinea();
+  const lineasConDatos = LINEAS_PRODUCCION.filter(l => {
+    const e = efic[l];
+    return e && (e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < 720));
+  });
+
+  seccion.style.display = lineasConDatos.length > 0 ? "" : "none";
+
+  const body = seccion.querySelector(".resumen-body");
+  if (!body) return;
+  body.innerHTML = "";
+
+  if (lineasConDatos.length === 0) return;
+
+  // Tabla de eficiencia
+  const tablaWrap = document.createElement("div");
+  tablaWrap.className = "resumen-tabla-wrap";
+
+  const tabla = document.createElement("table");
+  tabla.className = "resumen-tabla";
+  tabla.innerHTML = `<thead><tr>
+    <th>Línea</th><th>Disp.</th><th>Nov.</th><th>No rep.</th><th>Total perd.</th><th>Eficiencia</th>
+  </tr></thead>`;
+
+  const tbody = document.createElement("tbody");
+  lineasConDatos.forEach(linea => {
+    const e = efic[linea];
+    const cls = e.efic === null ? "" : e.efic >= 85 ? "efic-alta" : e.efic >= 60 ? "efic-media" : "efic-baja";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${linea}</strong></td>
+      <td>${e.disponible} min</td>
+      <td>${e.perdidosNov} min</td>
+      <td>${e.perdidosMicro} min</td>
+      <td>${e.totalPerdidos} min</td>
+      <td class="resumen-efic ${cls}">${e.efic !== null ? e.efic + "%" : "—"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tabla.appendChild(tbody);
+  tablaWrap.appendChild(tabla);
+  body.appendChild(tablaWrap);
+
+  // Gráfico
+  renderGraficoParadas(body, efic, lineasConDatos);
+}
+
+function rrect(ctx, x, y, w, h, r) {
+  if (w <= 0) return;
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function eficBarColor(pct) {
+  if (pct === null) return "#aaa";
+  if (pct >= 85) return "#388e3c";
+  if (pct >= 60) return "#f9a825";
+  return "#c62828";
+}
+
+function renderGraficoParadas(container, efic, lineas) {
+  if (_eficChart) { _eficChart.destroy(); _eficChart = null; }
+
+  const wrap = document.createElement("div");
+  wrap.className = "resumen-chart-wrap";
+  wrap.style.height = (lineas.length * 58 + 48) + "px";
+
+  const canvas = document.createElement("canvas");
+  wrap.appendChild(canvas);
+  container.appendChild(wrap);
+
+  const labels  = lineas.map(l => l.replace("LÍNEA ", "L"));
+  const values  = lineas.map(l => efic[l].efic ?? 0);
+  const colors  = lineas.map(l => eficBarColor(efic[l].efic));
+
+  const pctLabelPlugin = {
+    id: "pctLabel",
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx;
+      chart.data.datasets.forEach((ds, di) => {
+        chart.getDatasetMeta(di).data.forEach((bar, idx) => {
+          const val = ds.data[idx];
+          const lbl = val + "%";
+          ctx.save();
+          ctx.font = "700 14px sans-serif";
+          ctx.textBaseline = "middle";
+          const tw = ctx.measureText(lbl).width;
+          const barW = bar.x - bar.base;
+          if (barW > tw + 24) {
+            const pctVal = ds.data[idx];
+            const isYellow = pctVal >= 60 && pctVal < 85;
+            ctx.fillStyle = isYellow ? "rgba(30,30,46,0.9)" : "rgba(255,255,255,0.95)";
+            ctx.textAlign = "right";
+            ctx.shadowColor = isYellow ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.25)";
+            ctx.shadowBlur = 2;
+            ctx.fillText(lbl, bar.x - 10, bar.y);
+          } else {
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            ctx.textAlign = "left";
+            ctx.fillText(lbl, bar.x + 8, bar.y);
+          }
+          ctx.restore();
+        });
+      });
+    }
+  };
+
+  _eficChart = new Chart(canvas, {
+    type: "bar",
+    plugins: [pctLabelPlugin],
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        hoverBackgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 36,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 55, top: 4, bottom: 4 } },
+      plugins: {
+        legend:  { display: false },
+        tooltip: { enabled: false },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          grid: { color: "rgba(255,255,255,0.1)", lineWidth: 1 },
+          ticks: {
+            callback: v => v + "%",
+            font: { size: 11 },
+            color: "rgba(255,255,255,0.6)",
+            maxTicksLimit: 6,
+          },
+          border: { display: false },
+        },
+        y: {
+          grid: { display: false },
+          ticks: {
+            font: { weight: "700", size: 13 },
+            color: "rgba(255,255,255,0.85)",
+          },
+          border: { display: false },
+        }
+      }
+    }
+  });
+}

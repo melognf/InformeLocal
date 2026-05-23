@@ -7,7 +7,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="estilos.css?v=20260515-001" />
+  <link rel="stylesheet" href="estilos.css?v=20260519-001" />
   <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -15,6 +15,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="chart.min.js"></script>
 </head>
 
 <body>
@@ -150,6 +151,12 @@
       </form>
     </div>
 
+    <!-- ===== RESUMEN DEL TURNO ===== -->
+    <section id="resumenTurno" class="resumen-turno" style="display:none;">
+      <h2>RESUMEN DEL TURNO</h2>
+      <div class="resumen-body"></div>
+    </section>
+
     <!-- ===== NOVEDADES ===== -->
     <section id="novedades" class="novedades">
       <h2>NOVEDADES DEL TURNO</h2>
@@ -249,6 +256,50 @@
 
         </div>
       </form>
+
+      <!-- Sub-sección: Tiempos no reportados (micro-paradas) -->
+      <div class="micro-paradas-wrap" id="microParadasWrap">
+        <div class="micro-header">
+          <span class="micro-titulo">TIEMPOS NO REPORTADOS</span>
+          <span class="micro-subtitulo">Solo para cálculo de eficiencia — no aparece en el informe</span>
+        </div>
+        <form id="formMicro" class="micro-form">
+          <label>Línea:
+            <select id="mpLinea">
+              <option value="">— Seleccionar —</option>
+              <option>LÍNEA 1</option>
+              <option>LÍNEA 2</option>
+              <option>LÍNEA 3</option>
+              <option>LÍNEA 5</option>
+              <option>LÍNEA 6</option>
+              <option>LÍNEA 7</option>
+            </select>
+          </label>
+          <label>Causa:
+            <select id="mpCausa">
+              <option value="">— Sin clasificar —</option>
+              <option value="mecanica">🔧 MECÁNICA</option>
+              <option value="electrica">⚡ ELÉCTRICA</option>
+              <option value="operativa">👷 OPERATIVA</option>
+              <option value="calidad">⚠️ CALIDAD</option>
+              <option value="materias">📦 MAT. PRIMAS</option>
+              <option value="soplado">💨 SOPLADO</option>
+              <option value="ajenos">🔀 AJENOS</option>
+              <option value="cip">🧹 CIP</option>
+              <option value="arranque">🟡 ARRANQUE</option>
+              <option value="mantenimiento">🟫 MANTENIMIENTO</option>
+            </select>
+          </label>
+          <label class="micro-min-label">Minutos:
+            <input type="number" id="mpMinutos" min="1" max="719" placeholder="0" />
+          </label>
+          <label class="micro-nota-label">Nota (opcional):
+            <input type="text" id="mpNota" placeholder="Descripción breve..." />
+          </label>
+          <button type="submit" class="micro-btn-add">Agregar</button>
+        </form>
+        <div id="microLista" class="micro-lista"></div>
+      </div>
     </section>
 
     <!-- ===== ACCIONES PENDIENTES ===== -->
@@ -276,6 +327,20 @@
   </main>
 
   
+  <!-- Modal: Tiempos no reportados -->
+  <div id="microModal" class="micro-modal-overlay">
+    <div class="micro-modal">
+      <div class="micro-modal-head">
+        <div>
+          <span class="micro-titulo">TIEMPOS NO REPORTADOS</span>
+          <span class="micro-subtitulo">Solo para cálculo de eficiencia — no aparece en el informe</span>
+        </div>
+        <button type="button" id="microModalClose" class="micro-modal-close">×</button>
+      </div>
+      <div class="micro-modal-body" id="microModalBody"></div>
+    </div>
+  </div>
+
   <!-- Botón flotante -->
   <button id="btnFlotante" type="button" aria-label="Navegar">
     <span id="btnFlotanteIcono">＋</span>
