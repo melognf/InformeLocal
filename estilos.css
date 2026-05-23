@@ -1854,8 +1854,9 @@ body.modo-lectura #btnFlotante {
 /* ===== MICRO-PARADAS (Tiempos no reportados) ===== */
 .micro-paradas-wrap {
   margin-top: 24px;
-  border-top: 3px dashed #888;
-  padding-top: 16px;
+  background: #2e2e2e;
+  border-radius: 8px;
+  padding: 14px 16px 16px;
 }
 
 .micro-header {
@@ -1879,7 +1880,7 @@ body.modo-lectura #btnFlotante {
 
 .micro-subtitulo {
   font-size: 11px;
-  color: #888;
+  color: #aaa;
   font-style: italic;
 }
 
