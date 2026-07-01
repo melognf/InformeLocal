@@ -163,6 +163,7 @@ function cgBuildAxis() {
   window.cgDurMin = info.dur;
 
   const total = horas.length;
+  eje.style.gridTemplateColumns = `repeat(${total}, 1fr)`;
   horas.forEach((h, i) => {
     const lab = document.createElement('div');
     lab.className = 'lab';
@@ -1430,12 +1431,9 @@ function restoreEncabezado() {
     if (modoEl) modoEl.value = saved.modoTurno;
   }
   buildTnOptions();
+  if (saved.tn) document.getElementById("tn").value = saved.tn;
   buildRangoOptions();
-  if (saved.tn) {
-    const tnEl = document.getElementById("tn");
-    tnEl.value = saved.tn;
-    tnEl.dispatchEvent(new Event("change"));
-  }
+  document.getElementById("cgRango")?.dispatchEvent(new Event("change"));
   if (saved.fecha) document.getElementById("fecha").value = saved.fecha;
   if (saved.dia) document.getElementById("dia").value = saved.dia;
   if (saved.lideres) document.getElementById("lideres").value = saved.lideres;
