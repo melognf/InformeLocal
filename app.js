@@ -29,6 +29,95 @@ window.addEventListener("load", () => {
   }
 });
 
+/* ======== Turnos (2 o 3 por día) ======== */
+const MODOS_TURNO = {
+  "2": {
+    opciones: [
+      { tn: "TM", rango: "06-18", start: 6,  dur: 720 },
+      { tn: "TN", rango: "18-06", start: 18, dur: 720 },
+    ]
+  },
+  "3": {
+    opciones: [
+      { tn: "TM", rango: "06-14", start: 6,  dur: 480 },
+      { tn: "TT", rango: "14-22", start: 14, dur: 480 },
+      { tn: "TN", rango: "22-06", start: 22, dur: 480 },
+    ]
+  }
+};
+
+const RANGO_LABELS = {
+  "06-18": "06:00 → 18:00",
+  "18-06": "18:00 → 06:00",
+  "06-14": "06:00 → 14:00",
+  "14-22": "14:00 → 22:00",
+  "22-06": "22:00 → 06:00",
+};
+
+const RANGOS = {};
+Object.values(MODOS_TURNO).forEach(m => m.opciones.forEach(o => { RANGOS[o.rango] = o; }));
+
+function getModoTurno() {
+  return document.getElementById("modoTurno")?.value === "3" ? "3" : "2";
+}
+
+function rangoInfo(rangoId) {
+  return RANGOS[rangoId] || RANGOS["06-18"];
+}
+
+function rangoFinHora(rangoId) {
+  const info = rangoInfo(rangoId);
+  return (info.start + info.dur / 60) % 24;
+}
+
+function rangoEnvuelveMedianoche(rangoId) {
+  return rangoFinHora(rangoId) <= rangoInfo(rangoId).start;
+}
+
+function tnToRango(tn, modo) {
+  const m = MODOS_TURNO[modo] || MODOS_TURNO["2"];
+  const found = m.opciones.find(o => o.tn === tn);
+  return found ? found.rango : m.opciones[0].rango;
+}
+
+// Válido en ambos extremos (incluye la hora exacta de cierre del turno)
+function horaEnRangoInclusiva(h, rangoId) {
+  const info = rangoInfo(rangoId);
+  const end = rangoFinHora(rangoId);
+  if (info.start < end) return h >= info.start && h <= end;
+  return (h >= info.start && h <= 23) || (h >= 0 && h <= end);
+}
+
+// Excluye la hora exacta de cierre del turno
+function horaEnRangoExclusiva(h, rangoId) {
+  const info = rangoInfo(rangoId);
+  const end = rangoFinHora(rangoId);
+  if (info.start < end) return h >= info.start && h < end;
+  return (h >= info.start && h <= 23) || (h >= 0 && h < end);
+}
+
+function buildTnOptions() {
+  const sel = document.getElementById("tn");
+  if (!sel) return;
+  const modo = getModoTurno();
+  const prev = sel.value;
+  sel.innerHTML = `<option value=""></option>` +
+    MODOS_TURNO[modo].opciones.map(o => `<option>${o.tn}</option>`).join("");
+  const sigueValido = Array.from(sel.options).some(o => o.value === prev);
+  sel.value = sigueValido ? prev : "";
+}
+
+function buildRangoOptions() {
+  const sel = document.getElementById("cgRango");
+  if (!sel) return;
+  const modo = getModoTurno();
+  const tn = document.getElementById("tn")?.value || "";
+  sel.innerHTML = MODOS_TURNO[modo].opciones
+    .map(o => `<option value="${o.rango}">${RANGO_LABELS[o.rango]}</option>`)
+    .join("");
+  sel.value = tnToRango(tn, modo);
+}
+
 /* ======== Cronograma ======== */
 const CG_STATE_KEY = 'cronograma_v1';
 
@@ -40,8 +129,10 @@ const cg = {
   },
   relMin(hhmm, rango) {
     const m = this.toMin(hhmm);
-    if (rango === '06-18') return m - 6 * 60;
-    return (m >= 18 * 60) ? (m - 18 * 60) : (m + (24 * 60 - 18 * 60));
+    const info = rangoInfo(rango);
+    let rel = m - info.start * 60;
+    if (rel < 0) rel += 24 * 60;
+    return rel;
   }
 };
 
@@ -64,15 +155,12 @@ function cgBuildAxis() {
 
   eje.innerHTML = '';
   const rango = document.getElementById('cgRango')?.value || '06-18';
+  const info = rangoInfo(rango);
   const horas = [];
 
-  if (rango === '06-18') {
-    for (let h = 6; h < 18; h++) horas.push(h);
-    window.cgStartHour = 6;
-  } else {
-    for (let i = 0; i < 12; i++) horas.push((18 + i) % 24);
-    window.cgStartHour = 18;
-  }
+  for (let i = 0; i < info.dur / 60; i++) horas.push((info.start + i) % 24);
+  window.cgStartHour = info.start;
+  window.cgDurMin = info.dur;
 
   const total = horas.length;
   horas.forEach((h, i) => {
@@ -120,7 +208,7 @@ function cgAddBar(linea, inicio, fin, sabor, color = "rojo", restored = false) {
   const iniMin = iniH * 60 + iniM;
   const finMin = finH * 60 + finM;
 
-  const total = 12 * 60;
+  const total = window.cgDurMin || 720;
   const startRange = (window.cgStartHour ?? 6) * 60;
 
   let startMin, endMin;
@@ -248,18 +336,12 @@ form?.addEventListener('submit', e => {
   const iniH = parseInt(ini.split(':')[0], 10);
   const finH = parseInt(fin.split(':')[0], 10);
 
-  if (rango === '06-18') {
-    if (iniH < 6 || iniH >= 18 || finH < 6 || finH > 18) {
-      alert("⚠️ Los horarios deben estar entre 06:00 y 18:00.");
-      return;
-    }
-  } else {
-    const validoInicio = (iniH >= 18 && iniH <= 23) || (iniH >= 0 && iniH < 6);
-    const validoFin = (finH >= 18 && finH <= 23) || (finH >= 0 && finH <= 6);
-    if (!validoInicio || !validoFin) {
-      alert("⚠️ Los horarios deben estar entre 18:00 y 06:00.");
-      return;
-    }
+  if (!horaEnRangoExclusiva(iniH, rango) || !horaEnRangoInclusiva(finH, rango)) {
+    const info = rangoInfo(rango);
+    const iniLabel = String(info.start).padStart(2, '0') + ':00';
+    const finLabel = String(rangoFinHora(rango)).padStart(2, '0') + ':00';
+    alert(`⚠️ Los horarios deben estar entre ${iniLabel} y ${finLabel}.`);
+    return;
   }
 
   const color = document.getElementById("cgColor")?.value || "rojo";
@@ -354,23 +436,21 @@ function buildNvHoraOptions() {
   if (!sel || !rangoSel) return;
 
   const rango = rangoSel.value;
+  const info = rangoInfo(rango);
+  const end = rangoFinHora(rango);
   const opts = [];
+  const horas = [];
 
-  if (rango === "06-18") {
-    for (let h = 6; h < 18; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}">${v}</option>`);
-    }
+  if (info.start < end) {
+    for (let h = info.start; h < end; h++) horas.push(h);
   } else {
-    for (let h = 18; h <= 23; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}">${v}</option>`);
-    }
-    for (let h = 0; h <= 6; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}">${v}</option>`);
-    }
+    for (let h = info.start; h <= 23; h++) horas.push(h);
+    for (let h = 0; h <= end; h++) horas.push(h);
   }
+  horas.forEach(h => {
+    const v = String(h).padStart(2, "0") + ":00";
+    opts.push(`<option value="${v}">${v}</option>`);
+  });
 
   const prev = sel.value;
   sel.innerHTML = opts.join("");
@@ -397,34 +477,32 @@ document.getElementById("cgRango")?.addEventListener("change", () => {
 let NV_EDITING = false;
 
 function rangoActual() {
-  return document.getElementById("cgRango")?.value === "18-06" ? "18-06" : "06-18";
+  const v = document.getElementById("cgRango")?.value;
+  return RANGOS[v] ? v : "06-18";
 }
 
 function horaEnPuntoValida(hhmm) {
   if (!/^\d{2}:\d{2}$/.test(hhmm)) return false;
   const [h, m] = hhmm.split(":").map(Number);
   if (m !== 0) return false;
-  if (rangoActual() === "06-18") return h >= 6 && h <= 18;
-  return (h >= 18 && h <= 23) || (h >= 0 && h <= 6);
+  return horaEnRangoInclusiva(h, rangoActual());
 }
 
 function ordenHoraParaRango(hora) {
   if (!hora) return 999;
   const h = parseInt(hora.split(":")[0], 10);
   const rango = rangoActual();
+  const info = rangoInfo(rango);
+  const end = rangoFinHora(rango);
 
-  if (rango === "06-18") {
-    if (h >= 6 && h <= 18) return h - 6;
+  if (info.start <= end) {
+    if (h >= info.start && h <= end) return h - info.start;
     return 999;
   }
 
-  if (rango === "18-06") {
-    if (h >= 18 && h <= 23) return h - 18;
-    if (h >= 0 && h <= 6) return h + 6;
-    return 999;
-  }
-
-  return h;
+  if (h >= info.start) return h - info.start;
+  if (h <= end) return h + (24 - info.start);
+  return 999;
 }
 
 function sortNovedadesArray(list) {
@@ -781,11 +859,11 @@ const SEVERITY_ORDER = {
   "": 0
 };
 
-function getSemaforoColor(totalMin, worstSeverity) {
+function getSemaforoColor(totalMin, worstSeverity, durMin) {
   if (worstSeverity === 0) return "verde";
 
   if (totalMin > 0) {
-    const efic = ((720 - totalMin) / 720) * 100;
+    const efic = ((durMin - totalMin) / durMin) * 100;
     if (efic < 50) return "rojo";
     if (efic <= 75) return "amarillo";
     return "verde";
@@ -799,6 +877,7 @@ function getSemaforoColor(totalMin, worstSeverity) {
 
 function renderSemaforo() {
   const saved = JSON.parse(localStorage.getItem(FORM_KEY) || "[]");
+  const durMin = rangoInfo(document.getElementById("cgRango")?.value || "06-18").dur;
 
   document.querySelectorAll(".linea-card").forEach(card => {
     const h3 = card.querySelector("h3");
@@ -827,8 +906,8 @@ function renderSemaforo() {
 
     const dominantTipo = totalMin > 0 ? tipoConMasMin : (worstTipoSev?.tipo || null);
     const icono = dominantTipo ? (TIPOS_NOVEDAD[dominantTipo]?.icono || "") : "";
-    const color = getSemaforoColor(totalMin, worstSeverity);
-    const efic = totalMin > 0 ? Math.round(((720 - totalMin) / 720) * 100) : null;
+    const color = getSemaforoColor(totalMin, worstSeverity, durMin);
+    const efic = totalMin > 0 ? Math.round(((durMin - totalMin) / durMin) * 100) : null;
 
     const dot = document.createElement("span");
     dot.className = `semaforo-dot s-${color}`;
@@ -972,10 +1051,7 @@ formNovedad?.addEventListener("submit", async e => {
   }
 
   const h = parseInt(hora.split(":")[0], 10);
-  let valido = false;
-  if (rango === "06-18" && h >= 6 && h < 18) valido = true;
-  if (rango === "18-06" && (h >= 18 || h < 6)) valido = true;
-  if (!valido) {
+  if (!horaEnRangoExclusiva(h, rango)) {
     alert("⚠️ La hora ingresada está fuera del rango seleccionado.");
     return;
   }
@@ -1337,6 +1413,7 @@ const ENC_KEY = "encabezado_v1";
 function saveEncabezado() {
   const data = {
     turno: document.getElementById("turno")?.value || "",
+    modoTurno: document.getElementById("modoTurno")?.value || "2",
     tn: document.getElementById("tn")?.value || "",
     fecha: document.getElementById("fecha")?.value || "",
     dia: document.getElementById("dia")?.value || "",
@@ -1348,6 +1425,12 @@ function saveEncabezado() {
 function restoreEncabezado() {
   const saved = JSON.parse(localStorage.getItem(ENC_KEY) || "{}");
   if (saved.turno) document.getElementById("turno").value = saved.turno;
+  if (saved.modoTurno) {
+    const modoEl = document.getElementById("modoTurno");
+    if (modoEl) modoEl.value = saved.modoTurno;
+  }
+  buildTnOptions();
+  buildRangoOptions();
   if (saved.tn) {
     const tnEl = document.getElementById("tn");
     tnEl.value = saved.tn;
@@ -1364,18 +1447,28 @@ function clearEncabezado() {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
+  const modoEl = document.getElementById("modoTurno");
+  if (modoEl) modoEl.value = "2";
+  buildTnOptions();
+  buildRangoOptions();
 }
 
-["turno","tn","fecha","dia","lideres"].forEach(id => {
+["turno","modoTurno","tn","fecha","dia","lideres"].forEach(id => {
   document.getElementById(id)?.addEventListener("change", saveEncabezado);
 });
 document.getElementById("lideres")?.addEventListener("input", saveEncabezado);
+
+document.getElementById("modoTurno")?.addEventListener("change", () => {
+  buildTnOptions();
+  buildRangoOptions();
+  document.getElementById("cgRango")?.dispatchEvent(new Event("change"));
+});
 
 document.getElementById("tn")?.addEventListener("change", () => {
   const tn = document.getElementById("tn")?.value;
   const rangoSel = document.getElementById("cgRango");
   if (!rangoSel) return;
-  const nuevoRango = tn === "TN" ? "18-06" : "06-18";
+  const nuevoRango = tnToRango(tn, getModoTurno());
   if (rangoSel.value !== nuevoRango) {
     rangoSel.value = nuevoRango;
     rangoSel.dispatchEvent(new Event("change"));
@@ -1812,7 +1905,7 @@ btnCaptura?.addEventListener("click", async () => {
       });
     });
 
-    ["turno", "tn", "fecha", "lideres"].forEach(id => {
+    ["turno", "modoTurno", "tn", "fecha", "lideres"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.disabled = !show;
     });
@@ -2139,27 +2232,26 @@ function deleteMicroParada(index) {
 
 function horaInicioTurno() {
   const rango = document.getElementById("cgRango")?.value || "06-18";
-  return rango === "06-18" ? "06:00" : "18:00";
+  return String(rangoInfo(rango).start).padStart(2, "0") + ":00";
 }
 
 function buildMicroHoraOpts(sel, selected) {
   const rango = document.getElementById("cgRango")?.value || "06-18";
+  const info = rangoInfo(rango);
+  const end = rangoFinHora(rango);
   const opts = [];
-  if (rango === "06-18") {
-    for (let h = 6; h <= 18; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
-    }
+  const horas = [];
+
+  if (info.start <= end) {
+    for (let h = info.start; h <= end; h++) horas.push(h);
   } else {
-    for (let h = 18; h <= 23; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
-    }
-    for (let h = 0; h <= 6; h++) {
-      const v = String(h).padStart(2, "0") + ":00";
-      opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
-    }
+    for (let h = info.start; h <= 23; h++) horas.push(h);
+    for (let h = 0; h <= end; h++) horas.push(h);
   }
+  horas.forEach(h => {
+    const v = String(h).padStart(2, "0") + ":00";
+    opts.push(`<option value="${v}"${v === selected ? " selected" : ""}>${v}</option>`);
+  });
   sel.innerHTML = opts.join("");
   sel.value = selected;
 }
@@ -2359,7 +2451,7 @@ function minEntreHoras(desde, hasta, rango) {
   const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };
   let d = toMin(desde);
   let h = toMin(hasta);
-  if (rango === "18-06" && h <= d) h += 24 * 60;
+  if (rangoEnvuelveMedianoche(rango) && h <= d) h += 24 * 60;
   return Math.max(0, h - d);
 }
 
@@ -2368,7 +2460,7 @@ function calcEficienciaPorLinea() {
   const micro = getMicroParadas();
   const dispDesde = getDisponibleDesde();
   const rango = document.getElementById("cgRango")?.value || "06-18";
-  const finTurno = rango === "06-18" ? "18:00" : "06:00";
+  const finTurno = String(rangoFinHora(rango)).padStart(2, "0") + ":00";
 
   const result = {};
   LINEAS_PRODUCCION.forEach(linea => {
@@ -2397,9 +2489,10 @@ function renderResumenTurno() {
   if (!seccion) return;
 
   const efic = calcEficienciaPorLinea();
+  const durTurno = rangoInfo(document.getElementById("cgRango")?.value || "06-18").dur;
   const lineasConDatos = LINEAS_PRODUCCION.filter(l => {
     const e = efic[l];
-    return e && (e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < 720));
+    return e && (e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < durTurno));
   });
 
   seccion.style.display = lineasConDatos.length > 0 ? "" : "none";
