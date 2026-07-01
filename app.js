@@ -1495,11 +1495,12 @@ const CAMPOS_POR_LINEA = {
     { key: "rechazo", label: "RECHAZO",           type: "number" }
   ],
   "3": [
-    { key: "orden", label: "ORDEN",      type: "text" },
-    { key: "sabor", label: "SABOR",      type: "text" },
-    { key: "c1",    label: "CONTADOR 1", type: "number" },
-    { key: "c2",    label: "CONTADOR 2", type: "number" },
-    { key: "c3",    label: "CONTADOR 3", type: "number" }
+    { key: "orden",       label: "ORDEN",       type: "text" },
+    { key: "sabor",       label: "SABOR",       type: "text" },
+    { key: "c1",          label: "CONTADOR 1",  type: "number", size: "sm" },
+    { key: "c2",          label: "CONTADOR 2",  type: "number", size: "sm" },
+    { key: "c3",          label: "CONTADOR 3",  type: "number", size: "sm" },
+    { key: "desperdicio", label: "DESPERDICIO", type: "number", size: "sm" }
   ],
   "5": [
     { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
@@ -1512,11 +1513,12 @@ const CAMPOS_POR_LINEA = {
     { key: "desperdicio", label: "DESPERDICIO",           type: "number" }
   ],
   "7": [
-    { key: "orden", label: "ORDEN",      type: "text" },
-    { key: "sabor", label: "SABOR",      type: "text" },
-    { key: "c1",    label: "CONTADOR 1", type: "number" },
-    { key: "c2",    label: "CONTADOR 2", type: "number" },
-    { key: "c3",    label: "CONTADOR 3", type: "number" }
+    { key: "orden",       label: "ORDEN",       type: "text" },
+    { key: "sabor",       label: "SABOR",       type: "text" },
+    { key: "c1",          label: "CONTADOR 1",  type: "number", size: "sm" },
+    { key: "c2",          label: "CONTADOR 2",  type: "number", size: "sm" },
+    { key: "c3",          label: "CONTADOR 3",  type: "number", size: "sm" },
+    { key: "desperdicio", label: "DESPERDICIO", type: "number", size: "sm" }
   ]
 };
 
@@ -1564,8 +1566,9 @@ function buildRunFields(linea, run, savedData, disabled) {
   const div = document.createElement("div");
   div.className = "prod-fields";
 
-  campos.forEach(({ key, label, type }) => {
+  campos.forEach(({ key, label, type, size }) => {
     const lbl = document.createElement("label");
+    if (size === "sm") lbl.classList.add("campo-chico");
     lbl.textContent = label;
 
     const inp = document.createElement("input");

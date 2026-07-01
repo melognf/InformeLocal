@@ -1790,6 +1790,10 @@ body.modo-lectura #btnFlotante {
   flex: 1 1 130px;
 }
 
+.prod-fields label.campo-chico {
+  flex: 0 1 90px;
+}
+
 .prod-fields input {
   padding: 9px 10px;
   border: 1px solid #f5c0bc;
