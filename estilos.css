@@ -1791,7 +1791,7 @@ body.modo-lectura #btnFlotante {
 }
 
 .prod-fields label.campo-chico {
-  flex: 0 1 90px;
+  flex: 1 1 100px;
 }
 
 .prod-fields input {

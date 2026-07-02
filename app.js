@@ -1500,7 +1500,7 @@ const CAMPOS_POR_LINEA = {
     { key: "c1",          label: "CONTADOR 1",  type: "number", size: "sm" },
     { key: "c2",          label: "CONTADOR 2",  type: "number", size: "sm" },
     { key: "c3",          label: "CONTADOR 3",  type: "number", size: "sm" },
-    { key: "desperdicio", label: "DESPERDICIO", type: "number", size: "sm" }
+    { key: "desperdicio", label: "DESPERDICIO (BOTELLAS)", type: "number", size: "sm" }
   ],
   "5": [
     { key: "botellas",    label: "CANTIDAD DE BOTELLAS", type: "number" },
@@ -1518,7 +1518,7 @@ const CAMPOS_POR_LINEA = {
     { key: "c1",          label: "CONTADOR 1",  type: "number", size: "sm" },
     { key: "c2",          label: "CONTADOR 2",  type: "number", size: "sm" },
     { key: "c3",          label: "CONTADOR 3",  type: "number", size: "sm" },
-    { key: "desperdicio", label: "DESPERDICIO", type: "number", size: "sm" }
+    { key: "desperdicio", label: "DESPERDICIO (BOTELLAS)", type: "number", size: "sm" }
   ]
 };
 
