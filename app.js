@@ -990,6 +990,10 @@ function addNovedad(linea, hora, texto, tipo = "", minutos = 0, accion = null, i
   saved.push({ linea, hora, texto, tipo, minutos: Number(minutos) || 0, accion, imagenes });
   sortNovedadesArray(saved);
   localStorage.setItem(FORM_KEY, JSON.stringify(saved));
+
+  const match = linea?.match(/^LÍNEA\s+(\d+)$/);
+  if (match) setProdTurnoDisabled(match[1], false);
+
   renderNovedades();
   renderProdTurno();
 }
