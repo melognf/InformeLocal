@@ -2510,6 +2510,7 @@ function calcEficienciaPorLinea() {
 }
 
 document.getElementById("resumenTurnoClose")?.addEventListener("click", () => {
+  if (!confirm("¿Ocultar el Resumen del Turno? No va a volver a aparecer hasta que se presione Borrar Todo.")) return;
   setResumenTurnoOculto(true);
   renderResumenTurno();
 });
