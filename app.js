@@ -362,6 +362,15 @@ let _eficChart = null;
 
 const LINEAS_PRODUCCION = ["LÍNEA 1", "LÍNEA 2", "LÍNEA 3", "LÍNEA 5", "LÍNEA 6", "LÍNEA 7"];
 
+// Umbral de eficiencia (rojo/verde, sin amarillo) por línea, solo para Resumen del Turno.
+// LÍNEA 5 y 6 no figuran a propósito: no se cargan tiempos ahí, se ignoran en el resumen.
+const UMBRAL_EFICIENCIA_POR_LINEA = {
+  "LÍNEA 1": 47,
+  "LÍNEA 2": 60,
+  "LÍNEA 3": 63,
+  "LÍNEA 7": 60,
+};
+
 const TIPOS_MICRO = {
   mecanica:      { icono: "🔧", label: "MECÁNICA" },
   electrica:     { icono: "⚡", label: "ELÉCTRICA" },
@@ -2495,7 +2504,8 @@ function renderResumenTurno() {
 
   const efic = calcEficienciaPorLinea();
   const durTurno = rangoInfo(document.getElementById("cgRango")?.value || "06-18").dur;
-  const lineasConDatos = LINEAS_PRODUCCION.filter(l => {
+  const lineasResumen = LINEAS_PRODUCCION.filter(l => UMBRAL_EFICIENCIA_POR_LINEA[l] !== undefined);
+  const lineasConDatos = lineasResumen.filter(l => {
     const e = efic[l];
     return e && (e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < durTurno));
   });
@@ -2521,7 +2531,8 @@ function renderResumenTurno() {
   const tbody = document.createElement("tbody");
   lineasConDatos.forEach(linea => {
     const e = efic[linea];
-    const cls = e.efic === null ? "" : e.efic >= 85 ? "efic-alta" : e.efic >= 60 ? "efic-media" : "efic-baja";
+    const umbral = UMBRAL_EFICIENCIA_POR_LINEA[linea] ?? 60;
+    const cls = e.efic === null ? "" : e.efic >= umbral ? "efic-alta" : "efic-baja";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${linea}</strong></td>
@@ -2558,11 +2569,10 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.fill();
 }
 
-function eficBarColor(pct) {
+function eficBarColor(linea, pct) {
   if (pct === null) return "#aaa";
-  if (pct >= 85) return "#388e3c";
-  if (pct >= 60) return "#f9a825";
-  return "#c62828";
+  const umbral = UMBRAL_EFICIENCIA_POR_LINEA[linea] ?? 60;
+  return pct >= umbral ? "#388e3c" : "#c62828";
 }
 
 function renderGraficoParadas(container, efic, lineas) {
@@ -2578,7 +2588,7 @@ function renderGraficoParadas(container, efic, lineas) {
 
   const labels  = lineas.map(l => l.replace("LÍNEA ", "L"));
   const values  = lineas.map(l => efic[l].efic ?? 0);
-  const colors  = lineas.map(l => eficBarColor(efic[l].efic));
+  const colors  = lineas.map(l => eficBarColor(l, efic[l].efic));
 
   const pctLabelPlugin = {
     id: "pctLabel",
@@ -2594,11 +2604,9 @@ function renderGraficoParadas(container, efic, lineas) {
           const tw = ctx.measureText(lbl).width;
           const barW = bar.x - bar.base;
           if (barW > tw + 24) {
-            const pctVal = ds.data[idx];
-            const isYellow = pctVal >= 60 && pctVal < 85;
-            ctx.fillStyle = isYellow ? "rgba(30,30,46,0.9)" : "rgba(255,255,255,0.95)";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
             ctx.textAlign = "right";
-            ctx.shadowColor = isYellow ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.25)";
+            ctx.shadowColor = "rgba(0,0,0,0.25)";
             ctx.shadowBlur = 2;
             ctx.fillText(lbl, bar.x - 10, bar.y);
           } else {
