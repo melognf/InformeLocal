@@ -1239,6 +1239,36 @@ body.capturando .nv-main-row {
   margin-bottom: 4px;
 }
 
+/* Edición de la acción pendiente dentro de "Editar novedades" */
+.nv-edit-accion-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 6px;
+}
+.nv-edit-accion-label {
+  font-weight: 700;
+  font-size: 12px;
+  color: #e65100;
+}
+.nv-edit-accion-resp,
+.nv-edit-accion-om,
+.nv-edit-accion-texto {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  width: 100%;
+}
+.nv-edit-accion-texto {
+  resize: vertical;
+}
+
 .linea-card li b {
   font-size: 12px;
   margin-right: 4px;

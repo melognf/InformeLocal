@@ -730,6 +730,44 @@ function enterNvEditMode() {
     li.appendChild(inHora);
     li.appendChild(inMin);
     li.appendChild(ta);
+
+    const accionActual = JSON.parse(li.dataset.accion || "null");
+    if (accionActual) {
+      const accionWrap = document.createElement("div");
+      accionWrap.className = "nv-edit-accion-wrap";
+
+      const label = document.createElement("div");
+      label.className = "nv-edit-accion-label";
+      label.textContent = "🚩 Acción pendiente";
+      accionWrap.appendChild(label);
+
+      const selResp = document.createElement("select");
+      selResp.className = "nv-edit-accion-resp";
+      selResp.innerHTML = `
+        <option value="">— Seleccionar —</option>
+        <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+        <option value="PRODUCCIÓN">PRODUCCIÓN</option>
+        <option value="OTROS">OTROS</option>
+      `;
+      selResp.value = accionActual.responsable || "";
+      accionWrap.appendChild(selResp);
+
+      const taAccion = document.createElement("textarea");
+      taAccion.className = "nv-edit-accion-texto";
+      taAccion.rows = 2;
+      taAccion.placeholder = "Describí qué acción se debe realizar...";
+      taAccion.value = accionActual.texto || "";
+      accionWrap.appendChild(taAccion);
+
+      const inOm = document.createElement("input");
+      inOm.type = "text";
+      inOm.className = "nv-edit-accion-om";
+      inOm.placeholder = "Número de aviso (opcional)";
+      inOm.value = accionActual.om || "";
+      accionWrap.appendChild(inOm);
+
+      li.appendChild(accionWrap);
+    }
   });
 }
 
@@ -772,7 +810,17 @@ function saveNvEdits() {
       list[idx].texto    = newTexto;
       list[idx].tipo     = newTipo;
       list[idx].minutos  = newMinutos;
-      // accion no se toca — solo se modifica desde el formulario o el botón banderín
+
+      const selResp = li.querySelector(".nv-edit-accion-resp");
+      const taAccion = li.querySelector(".nv-edit-accion-texto");
+      const inOm = li.querySelector(".nv-edit-accion-om");
+      if (selResp || taAccion || inOm) {
+        list[idx].accion = {
+          responsable: selResp?.value || "",
+          texto: (taAccion?.value || "").trim(),
+          om: (inOm?.value || "").trim(),
+        };
+      }
     } else {
       list.push({ linea: oldLinea, hora: newHora, texto: newTexto, tipo: newTipo, minutos: newMinutos, accion: null });
     }
@@ -823,6 +871,7 @@ function renderNovedades() {
     li.dataset.texto = texto;
     li.dataset.tipo = tipo || "";
     li.dataset.minutos = min;
+    li.dataset.accion = JSON.stringify(accion || null);
     if (tipoInfo) li.classList.add(`nv-tipo-${tipoInfo.color}`);
 
     const b = document.createElement("b");
