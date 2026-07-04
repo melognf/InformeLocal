@@ -345,6 +345,14 @@ body.modo-lectura .tabla-produccion .td-formato-select {
   width: fit-content;
 }
 
+.cg-linea-turno:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 3px;
+  opacity: 1;
+}
+
 /* Scroll personalizado */
 .cronograma::-webkit-scrollbar { height: 6px; }
 .cronograma::-webkit-scrollbar-thumb { background: #aaa; border-radius: 3px; }
