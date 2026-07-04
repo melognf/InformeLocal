@@ -136,16 +136,13 @@ function setLineaDuracion(linea, val) {
   localStorage.setItem(LINEA_DURACION_KEY, JSON.stringify(saved));
 }
 
-function lineasInformadasCronograma() {
-  const corridas = JSON.parse(localStorage.getItem("corridas") || "[]");
-  return [...new Set(corridas.map(c => c.linea))];
-}
-
-// Todas en 8 -> 8. Todas en 12, o mezcla de 8 y 12 -> 12. Ninguna línea informada -> sigue el modo global.
+// Todas las líneas en 8 -> 8. Todas en 12, o mezcla de 8 y 12 -> 12 (para no perder horas
+// de las líneas de 12h). Se mira la duración configurada de las 6 líneas, tengan o no
+// corridas cargadas todavía — si solo mirara las que ya tienen datos, una línea de 12h
+// que aún no cargó nada quedaría "afuera" y el eje se achicaría a 8h antes de tiempo.
 function duracionEfectivaCronograma() {
-  const lineas = lineasInformadasCronograma();
-  if (lineas.length === 0) return getModoTurno() === "3" ? "8" : "12";
-  return lineas.every(l => getLineaDuracion(l) === "8") ? "8" : "12";
+  const todas8 = LINEAS_PRODUCCION.every(l => getLineaDuracion(l.match(/\d+/)?.[0]) === "8");
+  return todas8 ? "8" : "12";
 }
 
 function actualizarRangoAuto() {
