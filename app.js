@@ -339,6 +339,14 @@ function cgClear() {
   refrescarCronograma();
 }
 
+function actualizarVisibilidadFilasCronograma() {
+  const lectura = isLectura();
+  document.querySelectorAll('.cg-row').forEach(row => {
+    const tieneBarras = !!row.querySelector('.cg-lane .cg-bar');
+    row.style.display = (lectura && !tieneBarras) ? 'none' : '';
+  });
+}
+
 function restoreCorridas() {
   document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML = '');
   const saved = JSON.parse(localStorage.getItem("corridas") || "[]");
@@ -352,6 +360,8 @@ function restoreCorridas() {
     bars.forEach((bar, i) => bar.style.top = `${8 + i * 28}px`);
     adjustLaneHeight(lane);
   });
+
+  actualizarVisibilidadFilasCronograma();
 }
 
 function cgInit() {
@@ -2022,6 +2032,7 @@ btnCaptura?.addEventListener("click", async () => {
     renderProdTurno();
     renderMicroParadas();
     renderResumenTurno();
+    actualizarVisibilidadFilasCronograma();
   }
 
   modeBtn.onclick = () => {
