@@ -107,15 +107,80 @@ function buildTnOptions() {
   sel.value = sigueValido ? prev : "";
 }
 
+// El select de rango pasa a mostrar siempre las 5 franjas posibles (2 y 3 turnos):
+// el valor real lo terminan fijando actualizarRangoAuto()/duracionEfectivaCronograma(),
+// que combinan la duración propia de cada línea (ver LINEA_DURACION_KEY).
 function buildRangoOptions() {
   const sel = document.getElementById("cgRango");
   if (!sel) return;
-  const modo = getModoTurno();
-  const tn = document.getElementById("tn")?.value || "";
-  sel.innerHTML = MODOS_TURNO[modo].opciones
-    .map(o => `<option value="${o.rango}">${RANGO_LABELS[o.rango]}</option>`)
+  const prev = sel.value;
+  sel.innerHTML = Object.keys(RANGOS)
+    .map(id => `<option value="${id}">${RANGO_LABELS[id]}</option>`)
     .join("");
-  sel.value = tnToRango(tn, modo);
+  const sigueValido = Array.from(sel.options).some(o => o.value === prev);
+  sel.value = sigueValido ? prev : sel.options[0]?.value;
+}
+
+/* ======== Duración de turno por línea (para Cronograma y Eficiencia) ======== */
+const LINEA_DURACION_KEY = "linea_duracion_turno_v1";
+
+function getLineaDuracion(linea) {
+  const saved = JSON.parse(localStorage.getItem(LINEA_DURACION_KEY) || "{}");
+  if (saved[linea] === "8" || saved[linea] === "12") return saved[linea];
+  return getModoTurno() === "3" ? "8" : "12";
+}
+
+function setLineaDuracion(linea, val) {
+  const saved = JSON.parse(localStorage.getItem(LINEA_DURACION_KEY) || "{}");
+  saved[linea] = val;
+  localStorage.setItem(LINEA_DURACION_KEY, JSON.stringify(saved));
+}
+
+function lineasInformadasCronograma() {
+  const corridas = JSON.parse(localStorage.getItem("corridas") || "[]");
+  return [...new Set(corridas.map(c => c.linea))];
+}
+
+// Todas en 8 -> 8. Todas en 12, o mezcla de 8 y 12 -> 12. Ninguna línea informada -> sigue el modo global.
+function duracionEfectivaCronograma() {
+  const lineas = lineasInformadasCronograma();
+  if (lineas.length === 0) return getModoTurno() === "3" ? "8" : "12";
+  return lineas.every(l => getLineaDuracion(l) === "8") ? "8" : "12";
+}
+
+function actualizarRangoAuto() {
+  const rangoSel = document.getElementById("cgRango");
+  if (!rangoSel) return;
+  const tn = document.getElementById("tn")?.value;
+  const modoEfectivo = duracionEfectivaCronograma() === "8" ? "3" : "2";
+  const nuevoRango = tnToRango(tn, modoEfectivo);
+  if (rangoSel.value !== nuevoRango) {
+    rangoSel.value = nuevoRango;
+    rangoSel.dispatchEvent(new Event("change"));
+  }
+}
+
+// Recalcula todo lo que depende del rango vigente (cronograma + horarios + eficiencia).
+function refrescarCronograma() {
+  actualizarRangoAuto();
+  saveCgState();
+  cgBuildAxis();
+  restoreCorridas();
+  buildNvHoraOptions();
+  renderNovedades();
+  renderMicroParadas();
+  renderResumenTurno();
+}
+
+function initLineaTurnoSelects() {
+  document.querySelectorAll(".cg-linea-turno").forEach(sel => {
+    const linea = sel.dataset.linea;
+    sel.value = getLineaDuracion(linea);
+    sel.addEventListener("change", () => {
+      setLineaDuracion(linea, sel.value);
+      refrescarCronograma();
+    });
+  });
 }
 
 /* ======== Cronograma ======== */
@@ -247,6 +312,7 @@ function cgAddBar(linea, inicio, fin, sabor, color = "rojo", restored = false) {
   btn.addEventListener("click", () => {
     bar.remove();
     removeCorrida(linea, inicio, fin, sabor, color);
+    refrescarCronograma();
   });
 
   bar.appendChild(btn);
@@ -270,6 +336,7 @@ function cgClear() {
 
   ["corridas", CG_STATE_KEY].forEach(k => localStorage.removeItem(k));
   setTimeout(() => document.querySelectorAll('.cg-lane').forEach(l => l.innerHTML = ''), 100);
+  refrescarCronograma();
 }
 
 function restoreCorridas() {
@@ -288,11 +355,8 @@ function restoreCorridas() {
 }
 
 function cgInit() {
-  restoreCgState();
-  cgBuildAxis();
-  restoreCorridas();
-  buildNvHoraOptions();
-  renderNovedades();
+  initLineaTurnoSelects();
+  refrescarCronograma();
 
   renderProdTurno();
 
@@ -348,6 +412,7 @@ form?.addEventListener('submit', e => {
   const color = document.getElementById("cgColor")?.value || "rojo";
   cgAddBar(linea, ini, fin, sabor, color);
   form.reset();
+  refrescarCronograma();
 });
 
 /* =========================
@@ -1104,10 +1169,13 @@ nvClear?.addEventListener("click", () => {
   clearProdTurno();
   localStorage.removeItem(MICRO_KEY);
   localStorage.removeItem(MICRO_DISP_KEY);
+  localStorage.removeItem(LINEA_DURACION_KEY);
   setResumenTurnoOculto(false);
   closeMicroModal();
-  renderMicroParadas();
-  renderResumenTurno();
+  document.querySelectorAll(".cg-linea-turno").forEach(sel => {
+    sel.value = getLineaDuracion(sel.dataset.linea);
+  });
+  refrescarCronograma();
 });
 cgClearBtn?.addEventListener("click", () => cgClear());
 
@@ -1457,7 +1525,7 @@ function restoreEncabezado() {
   buildTnOptions();
   if (saved.tn) document.getElementById("tn").value = saved.tn;
   buildRangoOptions();
-  document.getElementById("cgRango")?.dispatchEvent(new Event("change"));
+  refrescarCronograma();
   if (saved.fecha) document.getElementById("fecha").value = saved.fecha;
   if (saved.dia) document.getElementById("dia").value = saved.dia;
   if (saved.lideres) document.getElementById("lideres").value = saved.lideres;
@@ -1473,6 +1541,7 @@ function clearEncabezado() {
   if (modoEl) modoEl.value = "2";
   buildTnOptions();
   buildRangoOptions();
+  refrescarCronograma();
 }
 
 ["turno","modoTurno","tn","fecha","dia","lideres"].forEach(id => {
@@ -1482,20 +1551,10 @@ document.getElementById("lideres")?.addEventListener("input", saveEncabezado);
 
 document.getElementById("modoTurno")?.addEventListener("change", () => {
   buildTnOptions();
-  buildRangoOptions();
-  document.getElementById("cgRango")?.dispatchEvent(new Event("change"));
+  refrescarCronograma();
 });
 
-document.getElementById("tn")?.addEventListener("change", () => {
-  const tn = document.getElementById("tn")?.value;
-  const rangoSel = document.getElementById("cgRango");
-  if (!rangoSel) return;
-  const nuevoRango = tnToRango(tn, getModoTurno());
-  if (rangoSel.value !== nuevoRango) {
-    rangoSel.value = nuevoRango;
-    rangoSel.dispatchEvent(new Event("change"));
-  }
-});
+document.getElementById("tn")?.addEventListener("change", refrescarCronograma);
 
 document.addEventListener("DOMContentLoaded", restoreEncabezado);
 
@@ -1719,6 +1778,7 @@ function prepararVistaPDF() {
   hide('.cierres-btns');
   hide('#formBarra');
   hide('.cronograma-controles');
+  hide('.cg-linea-turno');
 
   // Linea-cards sin novedades
   document.querySelectorAll('.linea-card').forEach(card => {
@@ -1934,6 +1994,8 @@ btnCaptura?.addEventListener("click", async () => {
       const el = document.getElementById(id);
       if (el) el.disabled = !show;
     });
+
+    document.querySelectorAll(".cg-linea-turno").forEach(el => { el.disabled = !show; });
   }
 
   function cierresTienenDatos() {
@@ -2472,11 +2534,11 @@ document.getElementById("cgRango")?.addEventListener("change", () => {
 /* =========================
    RESUMEN DEL TURNO
    ========================= */
-function minEntreHoras(desde, hasta, rango) {
+function minEntreHoras(desde, hasta, envuelveMedianoche) {
   const toMin = t => { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };
   let d = toMin(desde);
   let h = toMin(hasta);
-  if (rangoEnvuelveMedianoche(rango) && h <= d) h += 24 * 60;
+  if (envuelveMedianoche && h <= d) h += 24 * 60;
   return Math.max(0, h - d);
 }
 
@@ -2485,12 +2547,18 @@ function calcEficienciaPorLinea() {
   const micro = getMicroParadas();
   const dispDesde = getDisponibleDesde();
   const rango = document.getElementById("cgRango")?.value || "06-18";
-  const finTurno = String(rangoFinHora(rango)).padStart(2, "0") + ":00";
+  const inicioTurno = rangoInfo(rango).start;
 
   const result = {};
   LINEAS_PRODUCCION.forEach(linea => {
+    const num = linea.match(/\d+/)?.[0];
+    const durHoras = Number(getLineaDuracion(num));
+    const finMin = (inicioTurno * 60 + durHoras * 60) % (24 * 60);
+    const finTurno = String(Math.floor(finMin / 60)).padStart(2, "0") + ":00";
+    const envuelve = (inicioTurno * 60 + durHoras * 60) > 24 * 60;
+
     const inicio = dispDesde[linea] || horaInicioTurno();
-    const disponible = minEntreHoras(inicio, finTurno, rango);
+    const disponible = minEntreHoras(inicio, finTurno, envuelve);
 
     const perdidosNov = novedades
       .filter(n => n.linea === linea)

@@ -328,6 +328,21 @@ body.modo-lectura .tabla-produccion .td-formato-select {
   font-weight: 700;
   border-right: 1px solid #bdbdbd;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.cg-linea-turno {
+  font-size: 10px;
+  font-weight: 700;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 1px 3px;
+  width: fit-content;
 }
 
 /* Scroll personalizado */
