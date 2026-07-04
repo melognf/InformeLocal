@@ -358,7 +358,17 @@ const FORM_KEY = "novedades_v1";
 const MICRO_KEY = "micro_paradas_v1";
 const MICRO_DISP_KEY = "micro_disponible_v1";
 const CIERRES_KEY = "cierres_v1";
+const RESUMEN_OCULTO_KEY = "resumen_turno_oculto_v1";
 let _eficChart = null;
+
+function isResumenTurnoOculto() {
+  return localStorage.getItem(RESUMEN_OCULTO_KEY) === "1";
+}
+
+function setResumenTurnoOculto(oculto) {
+  if (oculto) localStorage.setItem(RESUMEN_OCULTO_KEY, "1");
+  else localStorage.removeItem(RESUMEN_OCULTO_KEY);
+}
 
 const LINEAS_PRODUCCION = ["LÍNEA 1", "LÍNEA 2", "LÍNEA 3", "LÍNEA 5", "LÍNEA 6", "LÍNEA 7"];
 
@@ -1094,6 +1104,7 @@ nvClear?.addEventListener("click", () => {
   clearProdTurno();
   localStorage.removeItem(MICRO_KEY);
   localStorage.removeItem(MICRO_DISP_KEY);
+  setResumenTurnoOculto(false);
   closeMicroModal();
   renderMicroParadas();
   renderResumenTurno();
@@ -2498,9 +2509,19 @@ function calcEficienciaPorLinea() {
   return result;
 }
 
+document.getElementById("resumenTurnoClose")?.addEventListener("click", () => {
+  setResumenTurnoOculto(true);
+  renderResumenTurno();
+});
+
 function renderResumenTurno() {
   const seccion = document.getElementById("resumenTurno");
   if (!seccion) return;
+
+  if (isResumenTurnoOculto()) {
+    seccion.style.display = "none";
+    return;
+  }
 
   const efic = calcEficienciaPorLinea();
   const durTurno = rangoInfo(document.getElementById("cgRango")?.value || "06-18").dur;
