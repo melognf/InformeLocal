@@ -2601,11 +2601,12 @@ function renderResumenTurno() {
   }
 
   const efic = calcEficienciaPorLinea();
-  const durTurno = rangoInfo(document.getElementById("cgRango")?.value || "06-18").dur;
   const lineasResumen = LINEAS_PRODUCCION.filter(l => UMBRAL_EFICIENCIA_POR_LINEA[l] !== undefined);
   const lineasConDatos = lineasResumen.filter(l => {
     const e = efic[l];
-    return e && (e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < durTurno));
+    if (!e) return false;
+    const durPropia = Number(getLineaDuracion(l.match(/\d+/)?.[0])) * 60;
+    return e.totalPerdidos > 0 || (e.disponible > 0 && e.disponible < durPropia);
   });
 
   seccion.style.display = lineasConDatos.length > 0 ? "" : "none";
