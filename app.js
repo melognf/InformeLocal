@@ -2248,14 +2248,29 @@ function buildCierreL3L7(linea, data) {
 
   const rowContadores = document.createElement("div");
   rowContadores.className = "cierre-row";
-  rowContadores.appendChild(field("CONTADOR 1", inp("number", "c1", linea, data.c1)));
-  rowContadores.appendChild(field("CONTADOR 2", inp("number", "c2", linea, data.c2)));
-  rowContadores.appendChild(field("CONTADOR 3", inp("number", "c3", linea, data.c3)));
+  const c1 = inp("number", "c1", linea, data.c1);
+  const c2 = inp("number", "c2", linea, data.c2);
+  const c3 = inp("number", "c3", linea, data.c3);
+  rowContadores.appendChild(field("CONTADOR 1", c1));
+  rowContadores.appendChild(field("CONTADOR 2", c2));
+  rowContadores.appendChild(field("CONTADOR 3", c3));
   frag.appendChild(rowContadores);
+
+  const cajasContadorInp = inp("number", "cajas_contador", linea, data.cajas_contador, "0", true);
+
+  function recalcCajasContador() {
+    const vals = [c1.value, c2.value, c3.value]
+      .map(v => parseFloat(v))
+      .filter(v => !isNaN(v) && v > 0);
+    const resultado = vals.length > 0 ? Math.ceil(Math.min(...vals) / 6) : "";
+    cajasContadorInp.value = resultado;
+    saveCierreField(linea, "cajas_contador", resultado);
+  }
+  [c1, c2, c3].forEach(el => el.addEventListener("input", recalcCajasContador));
 
   const rowCajas = document.createElement("div");
   rowCajas.className = "cierre-row";
-  rowCajas.appendChild(field("CAJAS SEGÚN CONTADOR", inp("number", "cajas_contador", linea, data.cajas_contador)));
+  rowCajas.appendChild(field("CAJAS SEGÚN CONTADOR", cajasContadorInp));
   rowCajas.appendChild(field("CAJAS RAP", inp("number", "cajas_rap", linea, data.cajas_rap)));
   frag.appendChild(rowCajas);
 
@@ -2263,6 +2278,8 @@ function buildCierreL3L7(linea, data) {
   rowMerma.className = "cierre-row";
   rowMerma.appendChild(field("MERMA", inp("number", "merma", linea, data.merma)));
   frag.appendChild(rowMerma);
+
+  setTimeout(recalcCajasContador, 0);
 
   return frag;
 }
