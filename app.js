@@ -2237,6 +2237,36 @@ function buildCierreSimple(linea, data) {
   return frag;
 }
 
+function buildCierreL3L7(linea, data) {
+  const frag = document.createDocumentFragment();
+
+  const row = document.createElement("div");
+  row.className = "cierre-row";
+  row.appendChild(field("NÚMERO DE ORDEN", inp("text", "orden", linea, data.orden)));
+  row.appendChild(field("CANTIDAD DE CAJAS", inp("number", "cajas", linea, data.cajas)));
+  frag.appendChild(row);
+
+  const rowContadores = document.createElement("div");
+  rowContadores.className = "cierre-row";
+  rowContadores.appendChild(field("CONTADOR 1", inp("number", "c1", linea, data.c1)));
+  rowContadores.appendChild(field("CONTADOR 2", inp("number", "c2", linea, data.c2)));
+  rowContadores.appendChild(field("CONTADOR 3", inp("number", "c3", linea, data.c3)));
+  frag.appendChild(rowContadores);
+
+  const rowCajas = document.createElement("div");
+  rowCajas.className = "cierre-row";
+  rowCajas.appendChild(field("CAJAS SEGÚN CONTADOR", inp("number", "cajas_contador", linea, data.cajas_contador)));
+  rowCajas.appendChild(field("CAJAS RAP", inp("number", "cajas_rap", linea, data.cajas_rap)));
+  frag.appendChild(rowCajas);
+
+  const rowMerma = document.createElement("div");
+  rowMerma.className = "cierre-row";
+  rowMerma.appendChild(field("MERMA", inp("number", "merma", linea, data.merma)));
+  frag.appendChild(rowMerma);
+
+  return frag;
+}
+
 function renderCierres() {
   const container = document.getElementById("cierresCards");
   if (!container) return;
@@ -2273,6 +2303,7 @@ function renderCierres() {
     const lineaData = data[linea] || {};
     if (linea === "1") card.appendChild(buildCierreL1(lineaData));
     else if (linea === "2") card.appendChild(buildCierreL2(lineaData));
+    else if (linea === "3" || linea === "7") card.appendChild(buildCierreL3L7(linea, lineaData));
     else card.appendChild(buildCierreSimple(linea, lineaData));
 
     container.appendChild(card);
