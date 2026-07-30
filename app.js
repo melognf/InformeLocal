@@ -2243,7 +2243,7 @@ function buildCierreL3L7(linea, data) {
   const row = document.createElement("div");
   row.className = "cierre-row";
   row.appendChild(field("NÚMERO DE ORDEN", inp("text", "orden", linea, data.orden)));
-  row.appendChild(field("CANTIDAD DE CAJAS", inp("number", "cajas", linea, data.cajas)));
+  row.appendChild(field("SABOR", inp("text", "sabor", linea, data.sabor)));
   frag.appendChild(row);
 
   const rowContadores = document.createElement("div");
