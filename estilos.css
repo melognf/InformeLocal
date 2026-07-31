@@ -1586,6 +1586,15 @@ body.capturando .nv-main-row {
   box-shadow: 0 0 0 3px rgba(0,0,0,.1);
 }
 
+.cierre-input-contador {
+  border-color: #e10600;
+}
+
+.cierre-input-contador:not(:placeholder-shown) {
+  background: #e10600;
+  color: #fff;
+}
+
 .cierre-calculated {
   background: #1a1a1a !important;
   color: #fff !important;

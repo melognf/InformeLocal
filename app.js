@@ -2251,6 +2251,7 @@ function buildCierreL3L7(linea, data) {
   const c1 = inp("number", "c1", linea, data.c1);
   const c2 = inp("number", "c2", linea, data.c2);
   const c3 = inp("number", "c3", linea, data.c3);
+  [c1, c2, c3].forEach(el => el.classList.add("cierre-input-contador"));
   rowContadores.appendChild(field("CONTADOR 1", c1));
   rowContadores.appendChild(field("CONTADOR 2", c2));
   rowContadores.appendChild(field("CONTADOR 3", c3));
