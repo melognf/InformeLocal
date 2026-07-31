@@ -2276,6 +2276,8 @@ function buildCierreL3L7(linea, data) {
 
   const rowMerma = document.createElement("div");
   rowMerma.className = "cierre-row";
+  rowMerma.appendChild(field("CANTIDAD DE PALLETS", inp("number", "pallets", linea, data.pallets)));
+  rowMerma.appendChild(field("PIQUE", inp("number", "pique", linea, data.pique)));
   rowMerma.appendChild(field("MERMA", inp("number", "merma", linea, data.merma)));
   frag.appendChild(rowMerma);
 
